@@ -27,12 +27,3 @@ export interface Resource {
   title: string
   url: string
 }
-
-export type WebviewMessage =
-  | { type: 'ready' }
-  | { type: 'getWorkspaceState' }
-  | { type: 'getCourses' }
-
-export type ExtensionMessage =
-  | { type: 'workspaceState'; payload: { sidePanel: Record<string, unknown> } }
-  | { type: 'courses'; payload: Course[] }

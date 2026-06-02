@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { getAllCourses } from '../data/CourseLoader';
 
-//https://code.visualstudio.com/api/extension-guides/webview?ref=codesphere.ghost.io
-//https://code.visualstudio.com/api/references/vscode-api#WebviewView
-//https://stackoverflow.com/questions/77978393/visual-studio-code-webview-provider
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -17,21 +15,25 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this.extensionUri],
     };
 
-    //Генерируем html
     webviewView.webview.html = this.getHtmlContent(webviewView.webview);
 
-    //Обработка сообщений от UI
     webviewView.webview.onDidReceiveMessage((message) => {
       switch (message.type) {
         case 'ready':
-          break; //UI сообщил, что загрузился. Можно отправить начальные данные.
+          break;
         case 'getWorkspaceState': {
-          //Читаем данные из хранилища VS Code
           const state = this.context.workspaceState.get<{ sidePanel: Record<string, unknown> }>('sidePanel');
-          //Отправляем данные обратно в UI
           webviewView.webview.postMessage({
             type: 'workspaceState',
             payload: { sidePanel: state ?? {} },
+          });
+          break;
+        }
+        case 'getCourses': {
+          const courses = getAllCourses();
+          webviewView.webview.postMessage({
+            type: 'courses',
+            payload: courses,
           });
           break;
         }
