@@ -54,8 +54,12 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
     const mainJsUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.js')
     );
+    const mainCssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
+    );
 
     html = html.replaceAll('{{mainJsUri}}', mainJsUri.toString());
+    html = html.replaceAll('{{mainCssUri}}', mainCssUri.toString());
     html = html.replaceAll('{{cspSource}}', webview.cspSource);
 
     return html;

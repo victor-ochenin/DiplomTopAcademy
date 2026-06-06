@@ -1,5 +1,3 @@
-// export type TaskType = 'choice' | 'coding' | 'open'
-
 export interface Course {
   id: string
   title: string
@@ -7,21 +5,39 @@ export interface Course {
   lessons: Lesson[]
 }
 
-export interface Lesson {
+export interface Document {
   id: string
   title: string
   content: string
-  // tasks: Task[]
+}
+
+export interface Lesson {
+  id: string
+  title: string
+  documents: Document[]
+  tasks: Task[]
   resources: Resource[]
 }
 
-// export interface Task {
-//   id: string
-//   type: TaskType
-//   question: string
-//   options?: string[]
-//   correctAnswer?: string | string[]
-// }
+export type Task =
+  | {
+      id: string
+      type: 'choice'
+      question: string
+      options: string[]
+      correctAnswer: string
+    }
+  | {
+      id: string
+      type: 'open'
+      question: string
+      acceptableAnswers: string[]
+    }
+  | {
+      id: string
+      type: 'coding'
+      question: string
+    }
 
 export interface Resource {
   title: string

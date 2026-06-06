@@ -1,0 +1,83 @@
+.lesson-page {
+  padding: 12px;
+}
+
+.lesson-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+  margin-bottom: 12px;
+}
+
+.lesson-page__back:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lesson-page__nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.lesson-page__dropdown {
+  flex: 1;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.lesson-page__dropdown:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.lesson-page__dropdown option {
+  background: #1a1a2e;
+  color: var(--text-primary);
+}
+
+.lesson-page__nav-btn {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.lesson-page__nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lesson-page__nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.lesson-page__content {
+  margin-top: 4px;
+}

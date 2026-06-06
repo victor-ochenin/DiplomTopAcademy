@@ -1,27 +1,50 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { ExtensionMessage } from './types/messages';
+import type { Course, ExtensionMessage } from './types/messages';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
-import CourseTab from './components/SidePanel/CourseTab';
+import SplashScreen from './components/SplashScreen';
+import CourseCard from './components/CourseCard';
+import CourseTab from './components/CourseTab';
 
 export default function App() {
-  const [loaded, setLoaded] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [inCourse, setInCourse] = useState(false);
 
   const handleMessage = useCallback((message: ExtensionMessage) => {
-    if (message.type === 'workspaceState') {
-      setLoaded(true);
+    if (message.type === 'courses') {
+      setCourses(message.payload);
     }
   }, []);
 
   const { postMessage } = useVsCodeApi(handleMessage);
 
   useEffect(() => {
-    postMessage({ type: 'ready' });
-    postMessage({ type: 'getWorkspaceState' });
-  }, []);
+    postMessage({ type: 'getCourses' });
+  }, [postMessage]);
 
-  if (!loaded) {
-    return <div>Nodomia</div>;
+  if (!splashDone) {
+    return <SplashScreen onComplete={() => setSplashDone(true)} />;
   }
 
-  return <CourseTab />;
+  const firstCourse = courses[0];
+
+  if (!firstCourse) {
+    return <div style={{ padding: 16, color: 'var(--text-muted)' }}>Loading...</div>;
+  }
+
+  if (!inCourse) {
+    return (
+      <CourseCard
+        course={firstCourse}
+        onEnter={() => setInCourse(true)}
+      />
+    );
+  }
+
+  return (
+    <CourseTab
+      course={firstCourse}
+      onBack={() => setInCourse(false)}
+    />
+  );
 }
