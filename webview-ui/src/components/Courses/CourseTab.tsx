@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Course } from '../../types/messages'
 import LessonView from '../LessonView'
 import TaskView from '../Tasks/TaskView'
@@ -18,57 +18,76 @@ interface NavItem {
   lessonIndex: number
 }
 
+interface ActiveItem {
+  lessonId: string
+  itemIndex: number
+}
+
 export default function CourseTab({ course, onBack }: CourseTabProps) {
-  const allItems = useMemo<NavItem[]>(() => {
-    const result: NavItem[] = []
+  const [openLessonId, setOpenLessonId] = useState<string | null>(null)
+  const [activeItem, setActiveItem] = useState<ActiveItem | null>(null)
+
+  const lessonItemsMap = useMemo(() => {
+    const map = new Map<string, NavItem[]>()
     course.lessons.forEach((lesson, li) => {
+      const items: NavItem[] = []
       for (const doc of lesson.documents ?? []) {
-        result.push({ id: doc.id, type: 'document', title: doc.title, lessonIndex: li })
+        items.push({ id: doc.id, type: 'document', title: doc.title, lessonIndex: li })
       }
       for (const task of lesson.tasks ?? []) {
-        result.push({ id: task.id, type: 'task', title: task.question, lessonIndex: li })
+        items.push({ id: task.id, type: 'task', title: task.question, lessonIndex: li })
       }
+      map.set(lesson.id, items)
     })
-    return result
+    return map
   }, [course])
 
-  const [openLessonId, setOpenLessonId] = useState<string | null>(null)
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [activeItem])
 
-  if (activeIndex !== null) {
-    const item = allItems[activeIndex]
-    const lesson = course.lessons[item.lessonIndex]
+  if (activeItem !== null) {
+    const lesson = course.lessons.find(l => l.id === activeItem.lessonId)
+    const lessonItems = lessonItemsMap.get(activeItem.lessonId) ?? []
+    const item = lessonItems[activeItem.itemIndex]
+
+    //setState внутри рендера допустим — React 18+ батчит его,
+    //условие !lesson || !item гарантирует единственный вызов без цикла
+    if (!lesson || !item) {
+      setActiveItem(null)
+      return null
+    }
 
     return (
       <div>
-        <button className="lesson-page__back" onClick={() => setActiveIndex(null)}>
+        <button className="lesson-page__back" onClick={() => setActiveItem(null)}>
           ← Назад
         </button>
 
         {item.type === 'document' && (() => {
           const doc = lesson.documents?.find(d => d.id === item.id)
           if (!doc) return <p>Document not found</p>
-          return <LessonView document={doc} resources={lesson.resources} />
+          return <LessonView key={item.id} document={doc} resources={lesson.resources} />
         })()}
         {item.type === 'task' && (() => {
           const task = lesson.tasks?.find(t => t.id === item.id)
           if (!task) return <p>Task not found</p>
-          return <TaskView task={task} />
+          return <TaskView key={item.id} task={task} />
         })()}
 
         <div className="lesson-nav" style={{ marginTop: 20 }}>
           <button
-            onClick={() => setActiveIndex(activeIndex - 1)}
-            disabled={activeIndex === 0}
+            onClick={() => setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex - 1 })}
+            disabled={activeItem.itemIndex === 0}
           >
             ←
           </button>
           <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            {activeIndex + 1} / {allItems.length}
+            {activeItem.itemIndex + 1} / {lessonItems.length}
           </span>
           <button
-            onClick={() => setActiveIndex(activeIndex + 1)}
-            disabled={activeIndex === allItems.length - 1}
+            onClick={() => setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex + 1 })}
+            disabled={activeItem.itemIndex === lessonItems.length - 1}
           >
             →
           </button>
@@ -77,7 +96,7 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
     )
   }
 
-  //Если activeIndex === null, возвращаем JSX для режима просмотра списка уроков (аккордеон)
+  //Если activeItem === null, отображаем список уроков (аккордеон)
   ///https://www.w3.org/WAI/ARIA/apg/patterns/accordion/
   return (
     <div>
@@ -91,9 +110,8 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
       <div className="accordion" style={{ paddingTop: 0 }}>
         {course.lessons.map(lesson => {
           const isOpen = openLessonId === lesson.id
-          //Фильтруем allItems, оставляя только элементы, принадлежащие текущему уроку
-          //indexOf находит индекс урока в массиве lessons
-          const items: NavItem[] = allItems.filter(i => i.lessonIndex === course.lessons.indexOf(lesson))
+          //Получаем элементы (документы и задания) только текущего урока
+          const items = lessonItemsMap.get(lesson.id) ?? []
 
           return (
             <div key={lesson.id} className="accordion-item">
@@ -118,13 +136,12 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
               <div className={`accordion-body${isOpen ? ' open' : ''}`}>
                 <div className="accordion-content">
                   {items.map((item, idx) => {
-                    const globalIdx = allItems.indexOf(item)
                     // Возвращаем JSX для одного элемента списка (документ или задача)
                     return (
                       <div
                         key={item.id}
                         className="lesson-item"
-                        onClick={() => setActiveIndex(globalIdx)}
+                        onClick={() => setActiveItem({ lessonId: lesson.id, itemIndex: idx })}
                       >
                         <div className={`lesson-type-icon ${item.type === 'task' ? 'challenge' : 'lesson'}`}>
                           {item.type === 'task' ? (
