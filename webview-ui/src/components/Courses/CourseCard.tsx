@@ -6,6 +6,12 @@ interface CourseCardProps {
   onEnter: () => void
 }
 
+function plural(n: number, one: string, few: string, many: string) {
+  if (n % 10 === 1 && n % 100 !== 11) return one
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few
+  return many
+}
+
 export default function CourseCard({ course, onEnter }: CourseCardProps) {
   const lessonCount = course.lessons.length
   const taskCount = course.lessons.reduce((s, l) => s + (l.tasks?.length ?? 0), 0)
@@ -33,7 +39,7 @@ export default function CourseCard({ course, onEnter }: CourseCardProps) {
           </div>
         </div>
 
-        <span className="beginner-badge">BEGINNER</span>
+        <span className="beginner-badge">НОВИЧОК</span>
 
         <p className="card-description">{course.description}</p>
 
@@ -45,13 +51,13 @@ export default function CourseCard({ course, onEnter }: CourseCardProps) {
               <rect x="3" y="14" width="7" height="7" rx="1"/>
               <rect x="14" y="14" width="7" height="7" rx="1"/>
             </svg>
-            <span>{lessonCount} lesson{lessonCount !== 1 ? 's' : ''}</span>
+            <span>{lessonCount} {plural(lessonCount, 'урок', 'урока', 'уроков')}</span>
           </div>
           <div className="footer-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
-            <span>{taskCount} challenge{taskCount !== 1 ? 's' : ''}</span>
+            <span>{taskCount} {plural(taskCount, 'задание', 'задания', 'заданий')}</span>
           </div>
         </div>
       </div>

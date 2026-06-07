@@ -5,7 +5,7 @@ interface SplashScreenProps {
   onComplete: () => void
 }
 
-const FULL_TEXT = 'Hello from Nodomia!'
+const FULL_TEXT = 'Привет от Nodomia!'
 
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [displayed, setDisplayed] = useState('')

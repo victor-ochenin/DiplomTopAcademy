@@ -3,14 +3,14 @@ import type { Course } from '../types';
 
 export const reactBasicsCourse: Course = {
   id: 'react-basics',
-  title: 'React Basics',
+  title: 'Основы React',
   description: 'Основы React',
   lessons: [{
     id: 'what-is-react',
-    title: 'What is React?',
+    title: 'Что такое React?',
     documents: [{
       id: 'intro',
-      title: 'Introduction React',
+      title: 'Введение в React',
       content: whatIsReact,
     }],
     tasks: [{

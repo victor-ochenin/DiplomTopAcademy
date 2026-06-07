@@ -7,12 +7,20 @@ interface CoursesPageProps {
   onSelectCourse: (id: string) => void
 }
 
+function pluralCourses(n: number) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'курс'
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'курса'
+  return 'курсов'
+}
+
 export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProps) {
+  const count = courses.length
+
   return (
     <div className="courses-page">
       <h1 className="courses-title">
-        Explore courses{' '}
-        <span className="courses-count">{courses.length} course{courses.length !== 1 ? 's' : ''}</span>
+        Обзор курсов{' '}
+        <span className="courses-count">{count} {pluralCourses(count)}</span>
       </h1>
 
       <div className="courses-icon-row">
@@ -25,7 +33,7 @@ export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProp
           </svg>
         </div>
         <span className="courses-icon-label">React</span>
-        <span className="courses-icon-count">{courses.length} course{courses.length !== 1 ? 's' : ''}</span>
+        <span className="courses-icon-count">{count} {pluralCourses(count)}</span>
       </div>
 
       <div className="courses-grid">
