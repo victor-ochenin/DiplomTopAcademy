@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Course, ExtensionMessage } from './types/messages';
 import { useVsCodeApi } from './hooks/useVsCodeApi';
 import SplashScreen from './components/SplashScreen';
-import CourseCard from './components/CourseCard';
-import CourseTab from './components/CourseTab';
+import CoursesPage from './components/Courses/CoursesPage';
+import CourseTab from './components/Courses/CourseTab';
 
 export default function App() {
   const [splashDone, setSplashDone] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
-  const [inCourse, setInCourse] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   const handleMessage = useCallback((message: ExtensionMessage) => {
     if (message.type === 'courses') {
@@ -26,25 +26,23 @@ export default function App() {
     return <SplashScreen onComplete={() => setSplashDone(true)} />;
   }
 
-  const firstCourse = courses[0];
+  const selectedCourse = selectedCourseId
+    ? courses.find(c => c.id === selectedCourseId) ?? null
+    : null;
 
-  if (!firstCourse) {
-    return <div style={{ padding: 16, color: 'var(--text-muted)' }}>Loading...</div>;
-  }
-
-  if (!inCourse) {
+  if (selectedCourse) {
     return (
-      <CourseCard
-        course={firstCourse}
-        onEnter={() => setInCourse(true)}
+      <CourseTab
+        course={selectedCourse}
+        onBack={() => setSelectedCourseId(null)}
       />
     );
   }
 
   return (
-    <CourseTab
-      course={firstCourse}
-      onBack={() => setInCourse(false)}
+    <CoursesPage
+      courses={courses}
+      onSelectCourse={setSelectedCourseId}
     />
   );
 }

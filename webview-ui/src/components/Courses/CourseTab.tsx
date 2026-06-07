@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import type { Course } from '../types/messages'
-import LessonView from './LessonView'
-import TaskView from './Tasks/TaskView'
-import '../styles/accordion.css'
-import '../styles/lesson.css'
-import '../styles/lesson-page.css'
+import type { Course } from '../../types/messages'
+import LessonView from '../LessonView'
+import TaskView from '../Tasks/TaskView'
+import '../../styles/accordion.css'
+import '../../styles/lesson.css'
+import '../../styles/lesson-page.css'
 
 interface CourseTabProps {
   course: Course

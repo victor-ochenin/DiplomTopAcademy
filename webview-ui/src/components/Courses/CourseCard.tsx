@@ -1,5 +1,5 @@
-import type { Course } from '../types/messages'
-import '../styles/card.css'
+import type { Course } from '../../types/messages'
+import '../../styles/card.css'
 
 interface CourseCardProps {
   course: Course
