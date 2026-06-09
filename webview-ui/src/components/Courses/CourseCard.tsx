@@ -32,14 +32,15 @@ export default function CourseCard({ course, onEnter }: CourseCardProps) {
             <div className="card-title-group">
               <div className="card-title-row">
                 <span className="card-title">{course.title}</span>
-
               </div>
               <span className="card-subtitle">React 19</span>
             </div>
           </div>
         </div>
 
-        <span className="beginner-badge">НОВИЧОК</span>
+        <span className={`level-badge level-${course.level}`}>
+          {course.level === 'beginner' ? 'НОВИЧОК' : course.level === 'intermediate' ? 'СРЕДНИЙ' : 'ПРОДВИНУТЫЙ'}
+        </span>
 
         <p className="card-description">{course.description}</p>
 

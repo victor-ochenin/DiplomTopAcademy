@@ -2,6 +2,7 @@ export interface Course {
   id: string
   title: string
   description: string
+  level: 'beginner' | 'intermediate' | 'advanced'
   lessons: Lesson[]
 }
 

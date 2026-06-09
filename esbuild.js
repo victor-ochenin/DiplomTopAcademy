@@ -25,7 +25,6 @@ const esbuildProblemMatcherPlugin = {
 
 async function main() {
 	const extensionCtx = await esbuild.context({
-		loader: { '.md': 'text' },
 		entryPoints: ['src/extension.ts'],
 		bundle: true,
 		format: 'cjs',
@@ -42,7 +41,6 @@ async function main() {
 	});
 
 	const webviewCtx = await esbuild.context({
-		loader: { '.md': 'text' },
 		entryPoints: ['webview-ui/src/main.tsx'],
 		bundle: true,
 		format: 'iife',

@@ -1,0 +1,9 @@
+{
+  "id": "react-19-patterns",
+  "title": "React 19 и паттерны",
+  "description": "Освойте возможности React 19: Actions, серверные компоненты, серверные функции и продвинутые паттерны композиции.",
+  "level": "intermediate",
+  "lessons": [
+    "src/data/lessons/react-19-patterns/actions-form-handling/lesson.json"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "react-basics",
+  "title": "Основы React",
+  "description": "Изучите основы React 19, от JSX и компонентов до управления состоянием и обработки событий",
+  "level": "beginner",
+  "lessons": [
+    "src/data/lessons/react-basics/what-is-react/lesson.json",
+    "src/data/lessons/react-basics/jsx/lesson.json"
+  ]
+}

@@ -1,5 +1,23 @@
 .card-wrapper {
+  width: 270px;
+  height: 180px;
   padding: 0;
+}
+
+.card {
+  width: 100%;
+  max-width: 270px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16162a 100%);
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 210, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card {
@@ -104,17 +122,27 @@
   font-weight: 500;
 }
 
-.beginner-badge {
-  display: inline-block;
-  background: rgba(0, 210, 180, 0.15);
-  color: #00d2b4;
+.level-badge {
+  align-self: flex-start;
   font-size: 9px;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 4px;
   margin-bottom: 10px;
   letter-spacing: 0.3px;
-  border: 1px solid rgba(0, 210, 180, 0.25);
+  border: 1px solid;
+}
+
+.level-beginner {
+  background: rgba(0, 210, 180, 0.15);
+  color: #00d2b4;
+  border-color: rgba(0, 210, 180, 0.25);
+}
+
+.level-intermediate {
+  background: rgba(255, 200, 0, 0.15);
+  color: #e6b800;
+  border-color: rgba(255, 200, 0, 0.3);
 }
 
 .card-description {
@@ -122,6 +150,11 @@
   font-size: 10px;
   line-height: 1.5;
   margin-bottom: 12px;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .card-footer {
