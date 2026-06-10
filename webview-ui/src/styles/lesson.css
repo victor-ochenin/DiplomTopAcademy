@@ -111,6 +111,35 @@
   color: #f472b6;
 }
 
+.lesson-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.lesson-content th,
+.lesson-content td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.lesson-content th {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.lesson-content td {
+  color: var(--text-secondary);
+}
+
+.lesson-content tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .lesson-content pre {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);

@@ -161,7 +161,3 @@ export async function loadCoursesAsync(): Promise<Course[]> {
   cached = courses;
   return courses;
 }
-
-export function loadCourses(): Course[] {
-  return cached ?? [];
-}

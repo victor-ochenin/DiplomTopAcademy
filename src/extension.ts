@@ -4,6 +4,7 @@ import { initCourseLoader } from './data/CourseLoader';
 
 export function activate(context: vscode.ExtensionContext) {
 	try {
+		//Передаем путь где лежит расширение для того чтобы в будущем понимать где лежат данные
 		initCourseLoader(context.extensionPath);
 	} catch (err) {
 		console.error('Nodomia: failed to initialize course loader', err);

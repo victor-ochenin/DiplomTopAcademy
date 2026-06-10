@@ -54,12 +54,8 @@ function MyForm() {
 
 ## Сравнение с подходом до React 19
 
-**До React 19:**
-- `onSubmit` + ручное управление `loading`
-- `useState` для ошибок
-- `useEffect` для побочных эффектов
-
-**React 19:**
-- `<form action={action}>` + автоматический `pending`
-- `useActionState` для состояния формы
-- Action как единое место для асинхронной логики
+| Задача | До React 19 | React 19 |
+|---|---|---|
+| Отправка формы | `onSubmit` + ручное управление `loading` | `<form action={action}>` + автоматический `pending` |
+| Обработка ошибок | `useState` для ошибок | `useActionState` для состояния формы |
+| Асинхронная логика | `useEffect` для побочных эффектов | Action как единое место для асинхронной логики |

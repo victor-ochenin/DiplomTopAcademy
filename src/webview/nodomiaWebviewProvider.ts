@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getAllCourses, getAllCoursesAsync } from '../data/CourseLoader';
+import { getAllCoursesAsync } from '../data/CourseLoader';
 
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
