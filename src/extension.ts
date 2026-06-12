@@ -14,6 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	try {
+		// Создаем мост между React-фронтендом (который рендерится внутри WebView) и extension host'ом VS Code
 		const provider = new NodomiaWebviewProvider(context.extensionUri, context);
 		context.subscriptions.push(
 			vscode.window.registerWebviewViewProvider('nodomia.sidePanel', provider)

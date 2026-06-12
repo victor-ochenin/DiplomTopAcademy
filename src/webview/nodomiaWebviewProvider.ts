@@ -12,10 +12,13 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   async resolveWebviewView(webviewView: vscode.WebviewView) {
     try {
       webviewView.webview.options = {
+        // Разрешает выполнение js в WebviewView
         enableScripts: true,
+        // Ограничение откуда будут грузиться файлы
         localResourceRoots: [this.extensionUri],
       };
 
+      // Загрузка html
       webviewView.webview.html = await this.getHtmlContent(webviewView.webview);
     } catch (err) {
       console.error('Nodomia: failed to initialize webview', err);
@@ -23,6 +26,7 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    // подписываемся на событие получения сообщений из webview где каждое обрабатываем через handleMessage
     webviewView.webview.onDidReceiveMessage(async (message) => {
       try {
         await this.handleMessage(message, webviewView);
@@ -39,22 +43,8 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
     switch (message.type) {
       case 'ready':
         break;
-
-      case 'getWorkspaceState': {
-        let state: Record<string, unknown> = {};
-        try {
-          const saved = this.context.workspaceState.get<{ sidePanel: Record<string, unknown> }>('sidePanel');
-          state = saved?.sidePanel ?? {};
-        } catch (err) {
-          console.error('Nodomia: failed to read workspace state', err);
-        }
-        webviewView.webview.postMessage({
-          type: 'workspaceState',
-          payload: { sidePanel: state },
-        });
-        break;
-      }
-
+      
+      // Запрос списка курсов для инициализации UI
       case 'getCourses': {
         try {
           const courses = await getAllCoursesAsync();
@@ -75,14 +65,16 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
     try {
       const htmlPath = path.join(this.extensionUri.fsPath, 'webview-ui', 'index.html');
       const html = await fs.promises.readFile(htmlPath, 'utf-8');
-
+      
+      // asWebviewUri Преобразует локальный `file://` URI в специальный URI, который VS Code может загружать внутри WebView.
       const mainJsUri = webview.asWebviewUri(
         vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.js')
       );
       const mainCssUri = webview.asWebviewUri(
         vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
       );
-
+      
+      // Подставляем плейсхолдеры
       return html
         .replaceAll('{{mainJsUri}}', mainJsUri.toString())
         .replaceAll('{{mainCssUri}}', mainCssUri.toString())
