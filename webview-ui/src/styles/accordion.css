@@ -5,6 +5,11 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
+  transition: padding-right 0.3s ease;
+}
+
+body.rag-panel-open .accordion {
+  padding-right: calc(var(--rag-panel-width, 400px) + 12px);
 }
 
 .accordion-item {

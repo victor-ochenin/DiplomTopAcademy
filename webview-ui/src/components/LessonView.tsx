@@ -1,5 +1,6 @@
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
 import type { Document, Resource } from '../types/messages'
 import '../styles/lesson.css'
 
@@ -18,7 +19,7 @@ export default function LessonView({ document, resources }: LessonViewProps) {
         </div>
       )}
       <div className="lesson-content">
-        <Markdown remarkPlugins={[remarkGfm]}>{document.content}</Markdown>
+        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{document.content}</Markdown>
       </div>
     </div>
   )

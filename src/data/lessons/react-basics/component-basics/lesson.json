@@ -1,0 +1,65 @@
+{
+  "id": "component-basics",
+  "title": "Component Basics",
+  "documents": [
+    {
+      "id": "functional-components",
+      "title": "Functional Components",
+      "contentFile": "src/data/lessons/react-basics/component-basics/functional-components.md"
+    },
+    {
+      "id": "component-composition",
+      "title": "Component Composition",
+      "contentFile": "src/data/lessons/react-basics/component-basics/component-composition.md"
+    },
+    {
+      "id": "component-patterns",
+      "title": "Component Patterns",
+      "contentFile": "src/data/lessons/react-basics/component-basics/component-patterns.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-6",
+      "type": "choice",
+      "question": "Какое имя компонента является валидным в React?",
+      "options": [
+        "myComponent",
+        "MyComponent",
+        "my_component",
+        "my-component"
+      ],
+      "correctAnswer": "MyComponent"
+    },
+    {
+      "id": "task-7",
+      "type": "choice",
+      "question": "Что должен возвращать React-компонент?",
+      "options": [
+        "Строку с HTML",
+        "React-элемент (JSX)",
+        "Объект JSON",
+        "Функцию"
+      ],
+      "correctAnswer": "React-элемент (JSX)"
+    },
+    {
+      "id": "task-8",
+      "type": "open",
+      "question": "Какой хук используется для объявления состояния в функциональном компоненте?",
+      "acceptableAnswers": [
+        "usestate",
+        "useState",
+        "use state",
+        "хук usestate",
+        "хук useState"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "title": "Your First Component",
+      "url": "https://react.dev/learn/your-first-component"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "usestate",
+  "title": "useState",
+  "documents": [
+    {
+      "id": "usestate-basics",
+      "title": "useState Basics",
+      "contentFile": "src/data/lessons/react-basics/usestate/usestate-basics.md"
+    },
+    {
+      "id": "usestate-objects-arrays",
+      "title": "useState with Objects & Arrays",
+      "contentFile": "src/data/lessons/react-basics/usestate/usestate-objects-arrays.md"
+    },
+    {
+      "id": "usestate-functional-updates",
+      "title": "Functional Updates Avoid Stale State",
+      "contentFile": "src/data/lessons/react-basics/usestate/usestate-functional-updates.md"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-12",
+      "type": "choice",
+      "question": "Что возвращает useState?",
+      "options": [
+        "Одно значение",
+        "Массив из двух элементов: значение и функцию обновления",
+        "Объект с полями value и setValue",
+        "Кортеж из трёх элементов"
+      ],
+      "correctAnswer": "Массив из двух элементов: значение и функцию обновления"
+    },
+    {
+      "id": "task-13",
+      "type": "open",
+      "question": "Как называется функция, которая передаётся в useState для начального состояния и выполняется один раз?",
+      "acceptableAnswers": [
+        "initializer function",
+        "функция инициализации",
+        "lazy initializer"
+      ]
+    },
+    {
+      "id": "task-14",
+      "type": "choice",
+      "question": "Как правильно обновить объект в useState?",
+      "options": [
+        "setUser({ name: 'Иван' })",
+        "setUser(prev => ({ ...prev, name: 'Иван' }))",
+        "user.name = 'Иван'; setUser(user)",
+        "setUser(Object.assign(user, { name: 'Иван' }))"
+      ],
+      "correctAnswer": "setUser(prev => ({ ...prev, name: 'Иван' }))"
+    }
+  ],
+  "resources": [
+    {
+      "title": "useState – React Docs",
+      "url": "https://react.dev/reference/react/useState"
+    }
+  ]
+}

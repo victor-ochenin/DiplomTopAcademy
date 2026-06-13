@@ -47,6 +47,16 @@ export default function RagSidePanel({
     }
   }, [isResizing])
 
+  // Синхронизируем ширину панели с CSS-переменной на :root для контента
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.setProperty('--rag-panel-width', panelWidth + 'px')
+    }
+    return () => {
+      document.documentElement.style.removeProperty('--rag-panel-width')
+    }
+  }, [panelWidth, isOpen])
+
   // Авто-рост textarea: при вводе сбрасываем height на 'auto', затем ставим scrollHeight
   const autoGrow = useCallback(() => {
     const ta = textareaRef.current

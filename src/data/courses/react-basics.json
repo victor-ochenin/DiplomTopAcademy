@@ -5,6 +5,12 @@
   "level": "beginner",
   "lessons": [
     "src/data/lessons/react-basics/what-is-react/lesson.json",
-    "src/data/lessons/react-basics/jsx/lesson.json"
+    "src/data/lessons/react-basics/jsx/lesson.json",
+    "src/data/lessons/react-basics/component-basics/lesson.json",
+    "src/data/lessons/react-basics/props/lesson.json",
+    "src/data/lessons/react-basics/usestate/lesson.json",
+    "src/data/lessons/react-basics/useeffect/lesson.json",
+    "src/data/lessons/react-basics/event-handling/lesson.json",
+    "src/data/lessons/react-basics/controlled-components/lesson.json"
   ]
 }

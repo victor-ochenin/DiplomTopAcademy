@@ -1,6 +1,11 @@
 .courses-page {
   padding: 24px;
   min-height: 100vh;
+  transition: padding-right 0.3s ease;
+}
+
+body.rag-panel-open .courses-page {
+  padding-right: calc(var(--rag-panel-width, 400px) + 24px);
 }
 
 .courses-title {

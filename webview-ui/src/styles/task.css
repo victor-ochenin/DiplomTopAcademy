@@ -2,6 +2,11 @@
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
+  transition: padding-right 0.3s ease;
+}
+
+body.rag-panel-open .task {
+  padding-right: calc(var(--rag-panel-width, 400px));
 }
 
 .task__question {

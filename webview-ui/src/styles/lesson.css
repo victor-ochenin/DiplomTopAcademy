@@ -1,5 +1,10 @@
 .lesson-container {
   padding: 16px;
+  transition: padding-right 0.3s ease;
+}
+
+body.rag-panel-open .lesson-container {
+  padding-right: calc(var(--rag-panel-width, 400px));
 }
 
 .lesson-back {
@@ -108,7 +113,7 @@
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
-  color: #f472b6;
+  color: #e5c07b;
 }
 
 .lesson-content table {
@@ -155,22 +160,54 @@
   color: var(--text-secondary);
 }
 
+/* highlight.js синтаксис */
+.hljs-keyword { color: #c678dd; }
+.hljs-built_in { color: #d19a66; }
+.hljs-type { color: #e5c07b; }
+.hljs-literal { color: #56b6c2; }
+.hljs-number { color: #d19a66; }
+.hljs-regexp { color: #98c379; }
+.hljs-string { color: #98c379; }
+.hljs-subst { color: #abb2bf; }
+.hljs-symbol { color: #61afef; }
+.hljs-class { color: #e5c07b; }
+.hljs-function { color: #61afef; }
+.hljs-title { color: #61afef; }
+.hljs-params { color: #abb2bf; }
+.hljs-comment { color: #5c6370; font-style: italic; }
+.hljs-doctag { color: #c678dd; }
+.hljs-meta { color: #5c6370; }
+.hljs-meta .hljs-keyword { color: #5c6370; }
+.hljs-meta .hljs-string { color: #98c379; }
+.hljs-section { color: #e06c75; }
+.hljs-tag { color: #e06c75; }
+.hljs-name { color: #e06c75; }
+.hljs-attr { color: #d19a66; }
+.hljs-attribute { color: #d19a66; }
+.hljs-variable { color: #e06c75; }
+.hljs-template-variable { color: #e06c75; }
+.hljs-addition { color: #98c379; background: rgba(152,195,121,0.1); }
+.hljs-deletion { color: #e06c75; background: rgba(224,108,117,0.1); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
+
 .lesson-nav {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   margin-top: 20px;
   gap: 12px;
 }
 
 .lesson-nav button {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
   cursor: pointer;
   font-weight: 500;
+  font-size: 13px;
   transition: background 0.15s ease;
 }
 
