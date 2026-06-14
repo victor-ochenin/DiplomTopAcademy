@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Course, Lesson, Task, Resource } from '../types';
+import type { Course, Lesson, Task, Resource } from '../../types';
 
 let basePath = '';
 

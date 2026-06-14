@@ -2,7 +2,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import type { Document, Resource } from '../types/messages'
-import '../styles/lesson.css'
+import '../styles/components.css'
 
 interface LessonViewProps {
   document: Document

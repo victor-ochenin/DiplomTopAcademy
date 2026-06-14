@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Course } from '../../types/messages'
 import LessonView from '../LessonView'
-import TaskView from '../Tasks/TaskView'
-import '../../styles/accordion.css'
-import '../../styles/lesson.css'
-import '../../styles/lesson-page.css'
+import TaskRenderer from '../Tasks/TaskRenderer'
+import '../../styles/components.css'
 
 interface CourseTabProps {
   course: Course
@@ -46,15 +44,16 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
     window.scrollTo(0, 0)
   }, [activeItem])
 
+  useEffect(() => {
+    setActiveItem(null)
+  }, [course.id])
+
   if (activeItem !== null) {
     const lesson = course.lessons.find(l => l.id === activeItem.lessonId)
     const lessonItems = lessonItemsMap.get(activeItem.lessonId) ?? []
     const item = lessonItems[activeItem.itemIndex]
 
-    //setState внутри рендера допустим — React 18+ батчит его,
-    //условие !lesson || !item гарантирует единственный вызов без цикла
     if (!lesson || !item) {
-      setActiveItem(null)
       return null
     }
 
@@ -72,7 +71,7 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
         {item.type === 'task' && (() => {
           const task = lesson.tasks?.find(t => t.id === item.id)
           if (!task) return <p>Task not found</p>
-          return <TaskView key={item.id} task={task} />
+          return <TaskRenderer key={item.id} task={task} />
         })()}
 
         <div className="lesson-nav" style={{ marginTop: 20 }}>

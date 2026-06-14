@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getAllCoursesAsync } from '../data/CourseLoader';
+import { loadCoursesAsync } from '../data/courses';
 
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
@@ -47,7 +47,7 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       // Запрос списка курсов для инициализации UI
       case 'getCourses': {
         try {
-          const courses = await getAllCoursesAsync();
+          const courses = await loadCoursesAsync();
           webviewView.webview.postMessage({ type: 'courses', payload: courses });
         } catch (err) {
           console.error('Nodomia: failed to load courses', err);

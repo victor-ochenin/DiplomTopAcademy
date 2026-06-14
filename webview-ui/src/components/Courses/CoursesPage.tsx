@@ -1,16 +1,11 @@
 import type { Course } from '../../types/messages'
 import CourseCard from './CourseCard'
-import '../../styles/courses.css'
+import { pluralize } from '../../utils/plural'
+import '../../styles/components.css'
 
 interface CoursesPageProps {
   courses: Course[]
   onSelectCourse: (id: string) => void
-}
-
-function pluralCourses(n: number) {
-  if (n % 10 === 1 && n % 100 !== 11) return 'курс'
-  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'курса'
-  return 'курсов'
 }
 
 export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProps) {
@@ -20,7 +15,7 @@ export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProp
     <div className="courses-page">
       <h1 className="courses-title">
         Обзор курсов{' '}
-        <span className="courses-count">{count} {pluralCourses(count)}</span>
+        <span className="courses-count">{count} {pluralize(count, 'курс', 'курса', 'курсов')}</span>
       </h1>
 
       <div className="courses-icon-row">
@@ -33,7 +28,7 @@ export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProp
           </svg>
         </div>
         <span className="courses-icon-label">React</span>
-        <span className="courses-icon-count">{count} {pluralCourses(count)}</span>
+        <span className="courses-icon-count">{count} {pluralize(count, 'курс', 'курса', 'курсов')}</span>
       </div>
 
       <div className="courses-grid">
