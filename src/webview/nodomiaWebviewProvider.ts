@@ -56,6 +56,16 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
         break;
       }
 
+      case 'askQuestion': {
+        setTimeout(() => {
+          webviewView.webview.postMessage({
+            type: 'answer',
+            payload: 'Это тестовый ответ.',
+          });
+        }, 1000);
+        break;
+      }
+
       default:
         console.warn(`Nodomia: unknown message type: ${(message as any)?.type}`);
     }
