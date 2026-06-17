@@ -57,12 +57,21 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       }
 
       case 'askQuestion': {
-        setTimeout(() => {
-          webviewView.webview.postMessage({
-            type: 'answer',
-            payload: 'Это тестовый ответ.',
+        try {
+          const res = await fetch('http://localhost:3001/api/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: message.payload }),
           });
-        }, 1000);
+          if (!res.ok) { throw new Error(`Server error: ${res.status}`); }
+          const data = await res.json() as { answer: string };
+          webviewView.webview.postMessage({ type: 'answer', payload: data.answer });
+        } catch (err) {
+          webviewView.webview.postMessage({
+            type: 'ragError',
+            payload: err instanceof Error ? err.message : 'Unknown error',
+          });
+        }
         break;
       }
 

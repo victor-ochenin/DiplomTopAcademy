@@ -7,11 +7,14 @@ import RagSidePanel, { type ChatMessage } from './RagSidePanel'
 
 export default function RagAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const { isOpen, togglePanel, closePanel } = useRagState()
   const { postMessage } = useVsCodeApi((msg: ExtensionMessage) => {
     if (msg.type === 'answer') {
+      setIsLoading(false)
       setMessages(prev => [...prev, { role: 'assistant', text: msg.payload }])
     } else if (msg.type === 'ragError') {
+      setIsLoading(false)
       setMessages(prev => [...prev, { role: 'assistant', text: `Ошибка: ${msg.payload}` }])
     }
   })
@@ -28,6 +31,7 @@ export default function RagAssistant() {
   }, [isOpen])
 
   const handleSend = useCallback((text: string) => {
+    setIsLoading(true)
     setMessages(prev => [...prev, { role: 'user', text }])
     postMessage({ type: 'askQuestion', payload: text })
   }, [postMessage])
@@ -45,6 +49,7 @@ export default function RagAssistant() {
         onClose={closePanel}
         onSend={handleSend}
         messages={messages}
+        isLoading={isLoading}
       />
     </>
   )

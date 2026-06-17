@@ -10,6 +10,7 @@ interface RagSidePanelProps {
   onClose: () => void
   onSend: (text: string) => void
   messages: ChatMessage[]
+  isLoading: boolean
 }
 
 const MIN_WIDTH = 400
@@ -20,6 +21,7 @@ export default function RagSidePanel({
   onClose,
   onSend,
   messages,
+  isLoading,
 }: RagSidePanelProps) {
   const [panelWidth, setPanelWidth] = useState(MIN_WIDTH)
   const [isResizing, setIsResizing] = useState(false)
@@ -117,6 +119,7 @@ export default function RagSidePanel({
             </div>
           ))
         )}
+        {isLoading && <div className="rsp-msg rsp-msg--assistant rsp-msg--loading"><span className="rsp-dots"><span>.</span><span>.</span><span>.</span></span></div>}
         <div ref={messagesEndRef} />
       </div>
 
@@ -128,8 +131,9 @@ export default function RagSidePanel({
           rows={1}
           onInput={autoGrow}
           onKeyDown={handleKeyDown}
+          disabled={isLoading}
         />
-        <button className="rsp-send-btn" onClick={handleSend}>
+        <button className="rsp-send-btn" onClick={handleSend} disabled={isLoading}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M1 8L15 1L8 15L7 9L1 8Z" fill="currentColor" />
           </svg>
