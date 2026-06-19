@@ -1,6 +1,7 @@
 {
   "name": "nodomia",
   "displayName": "nodomia",
+  "publisher": "victor-ochenin",
   "description": "An intelligent extension, which is an educational simulator with a personalized assistant based on the RAG system",
   "version": "0.0.1",
   "engines": {

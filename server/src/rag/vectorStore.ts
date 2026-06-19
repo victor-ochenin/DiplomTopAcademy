@@ -44,7 +44,7 @@ const __dirname = dirname(__filename)
 const COLLECTION_NAME = 'nodomia'
 const CHROMA_URL = 'http://localhost:8000'
 const CHROMA_DATA_DIR = join(__dirname, '..', '..', 'data', 'chroma')
-const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
+export const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
 const CHECKSUM_FILE = join(CHROMA_DATA_DIR, 'checksum.txt')
 
 export interface DocumentResult {
@@ -54,7 +54,7 @@ export interface DocumentResult {
 
 let queryCollection: ((text: string, k?: number) => Promise<DocumentResult[]>) | null = null
 
-function computeChecksum(): string {
+export function computeChecksum(): string {
   const files: string[] = []
 
   function walk(dir: string) {
@@ -72,7 +72,7 @@ function computeChecksum(): string {
   return hash.digest('hex')
 }
 
-function loadDocuments(): { id: string; content: string; metadata: Record<string, string> }[] {
+export function loadDocuments(): { id: string; content: string; metadata: Record<string, string> }[] {
   const results: { id: string; content: string; metadata: Record<string, string> }[] = []
 
   if (!existsSync(LESSONS_DIR)) {

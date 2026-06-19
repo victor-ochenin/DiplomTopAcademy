@@ -25,5 +25,11 @@ app.post('/api/query', async (c) => {
 })
 
 const port = Number(process.env.PORT || 3001)
-serve({ fetch: app.fetch, port })
-console.log(`Server on http://localhost:${port}`)
+// не стартуем HTTP-сервер во время тестов — Vitest выставляет NODE_ENV=test
+if (process.env.NODE_ENV !== 'test') {
+  serve({ fetch: app.fetch, port })
+  console.log(`Server on http://localhost:${port}`)
+}
+
+// экспорт app для тестов: app.request() симулирует HTTP без реального сервера
+export { app }

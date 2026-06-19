@@ -4,21 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-"dev": "npx tsx watch src/index.ts",
-"start": "npx tsx src/index.ts"
+    "dev": "npx tsx watch src/index.ts",
+    "start": "npx tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^1.13",
-    "hono": "^4.7",
-    "chromadb": "^2.1",
-    "@langchain/openai": "^0.4",
     "@langchain/core": "^0.3",
+    "@langchain/openai": "^0.4",
     "cheerio": "^1.0",
-    "dotenv": "^16.4"
+    "chromadb": "^2.1",
+    "dotenv": "^16.4",
+    "hono": "^4.7"
   },
   "devDependencies": {
-"@types/node": "^22.14",
-"tsx": "^4.19",
-"typescript": "^5.8"
+    "@types/node": "^22.14",
+    "tsx": "^4.19",
+    "typescript": "^5.8",
+    "vitest": "^4.1.9"
   }
 }
