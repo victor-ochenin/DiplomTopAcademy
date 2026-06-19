@@ -1,9 +1,42 @@
 import 'dotenv/config'
-import { ChromaClient, OpenAIEmbeddingFunction } from 'chromadb'
+import { ChromaClient } from 'chromadb'
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+const OPENROUTER_BASE = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1'
+
+// кастомный класс (адаптер) эмбеддингов для ChromaDB
+// ChromaDB ожидает интерфейс { generate(texts: string[]): number[][] }
+// штатный OpenAIEmbeddingFunction не умеет работать через OpenRouter
+class OpenRouterEmbeddingFunction {
+  private apiKey: string
+  private model: string
+
+  constructor({ apiKey, model }: { apiKey: string; model?: string }) {
+    this.apiKey = apiKey
+    this.model = model || 'nvidia/llama-nemotron-embed-vl-1b-v2:free'
+  }
+
+  async generate(texts: string[]): Promise<number[][]> {
+    const res = await fetch(`${OPENROUTER_BASE}/embeddings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model: this.model, input: texts }),
+    })
+    if (!res.ok) {
+      const err = await res.text()
+      throw new Error(`OpenRouter embedding failed (${res.status}): ${err}`)
+    }
+    const json = await res.json()
+    // OpenRouter возвращает массив в произвольном порядке — сортируем по index
+    return json.data.sort((a: any, b: any) => a.index - b.index).map((d: any) => d.embedding)
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -117,9 +150,9 @@ export async function ensureIndex(): Promise<void> {
   mkdirSync(CHROMA_DATA_DIR, { recursive: true })
 
   const client = new ChromaClient({ path: CHROMA_URL })
-  const embedder = new OpenAIEmbeddingFunction({
-    openai_api_key: process.env.OPENAI_API_KEY!,
-    openai_model: 'text-embedding-3-small',
+  const embedder = new OpenRouterEmbeddingFunction({
+    apiKey: process.env.OPENAI_API_KEY!,
+    model: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
   })
 
   const current = computeChecksum()
@@ -129,7 +162,7 @@ export async function ensureIndex(): Promise<void> {
   if (current !== prev) {
     try { await client.deleteCollection({ name: COLLECTION_NAME }) } catch { /* not exist */ }
 
-    const collection = await client.createCollection({ name: COLLECTION_NAME, embeddingFunction: embedder })
+    const collection = await client.createCollection({ name: COLLECTION_NAME, embeddingFunction: embedder, metadata: { 'hnsw:space': 'cosine' } })
     const docs = loadDocuments()
 
     if (docs.length === 0) {

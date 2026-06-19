@@ -20,9 +20,9 @@ export async function queryRag(question: string): Promise<{ answer: string; sour
 
   const prompt = ChatPromptTemplate.fromMessages([
     ['system', `You are an assistant for the Nodomia programming course.
-Answer based ONLY on the provided context.
-If the answer is not in the context, say:
-"Я не знаю, этот вопрос выходит за рамки курса."
+Answer based on the provided context. Do not output the raw document text.
+If the context does not contain the answer, say:
+"В моей базе знаний не нашлось ответа на этот вопрос. Попробуйте самостоятельно поискать ответ."
 Do not use any external knowledge.`],
     ['human', 'Context: {context}\n\nQuestion: {question}'],
   ])
