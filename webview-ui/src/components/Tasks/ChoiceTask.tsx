@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Task } from '../../types/messages'
-import '../../styles/task.css'
+import '../../styles/components.css'
 
 interface ChoiceTaskProps {
   task: Extract<Task, { type: 'choice' }>

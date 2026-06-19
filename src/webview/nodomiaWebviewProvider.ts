@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getAllCoursesAsync } from '../data/CourseLoader';
+import { loadCoursesAsync } from '../data/courses';
 
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
@@ -47,11 +47,30 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       // Запрос списка курсов для инициализации UI
       case 'getCourses': {
         try {
-          const courses = await getAllCoursesAsync();
+          const courses = await loadCoursesAsync();
           webviewView.webview.postMessage({ type: 'courses', payload: courses });
         } catch (err) {
           console.error('Nodomia: failed to load courses', err);
           webviewView.webview.postMessage({ type: 'courses', payload: [] });
+        }
+        break;
+      }
+
+      case 'askQuestion': {
+        try {
+          const res = await fetch('http://localhost:3001/api/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: message.payload }),
+          });
+          if (!res.ok) { throw new Error(`Server error: ${res.status}`); }
+          const data = await res.json() as { answer: string };
+          webviewView.webview.postMessage({ type: 'answer', payload: data.answer });
+        } catch (err) {
+          webviewView.webview.postMessage({
+            type: 'ragError',
+            payload: err instanceof Error ? err.message : 'Unknown error',
+          });
         }
         break;
       }
