@@ -1,0 +1,13 @@
+{
+  "id": "react-server-components",
+  "title": "React Server Components",
+  "description": "Продвинутый курс по серверным компонентам, асинхронной загрузке данных, Server Actions, Streaming и React Compiler.",
+  "level": "advanced",
+  "lessons": [
+    "src/data/lessons/react-server-components/rsc-fundamentals/lesson.json",
+    "src/data/lessons/react-server-components/async-data-fetching/lesson.json",
+    "src/data/lessons/react-server-components/server-actions/lesson.json",
+    "src/data/lessons/react-server-components/streaming-suspense/lesson.json",
+    "src/data/lessons/react-server-components/react-compiler/lesson.json"
+  ]
+}

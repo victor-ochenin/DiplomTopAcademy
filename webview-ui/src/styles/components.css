@@ -289,6 +289,12 @@ body.rag-panel-open .accordion {
   border-color: rgba(255, 200, 0, 0.3);
 }
 
+.level-advanced {
+  background: rgba(255, 60, 60, 0.15);
+  color: #ff3c3c;
+  border-color: rgba(255, 60, 60, 0.3);
+}
+
 .card-description {
   color: #9a9ab0;
   font-size: 10px;
