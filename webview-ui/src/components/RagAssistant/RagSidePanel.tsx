@@ -131,7 +131,6 @@ export default function RagSidePanel({
           rows={1}
           onInput={autoGrow}
           onKeyDown={handleKeyDown}
-          disabled={isLoading}
         />
         <button className="rsp-send-btn" onClick={handleSend} disabled={isLoading}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">

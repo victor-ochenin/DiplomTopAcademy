@@ -15,7 +15,7 @@ export default function RagAssistant() {
       setMessages(prev => [...prev, { role: 'assistant', text: msg.payload }])
     } else if (msg.type === 'ragError') {
       setIsLoading(false)
-      setMessages(prev => [...prev, { role: 'assistant', text: `Ошибка: ${msg.payload}` }])
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Сервер не отвечает. Попробуйте позже.' }])
     }
   })
 

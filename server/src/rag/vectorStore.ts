@@ -2,28 +2,34 @@ import 'dotenv/config'
 import { ChromaClient } from 'chromadb'
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join, dirname, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const OPENROUTER_BASE = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1'
 
 // кастомный класс (адаптер) эмбеддингов для ChromaDB
-// ChromaDB ожидает интерфейс { generate(texts: string[]): number[][] }
+// ChromaDB ожидает интерфейс { generate(texts: string[]): number[][], name?: string, getConfig?(): any }
 // штатный OpenAIEmbeddingFunction не умеет работать через OpenRouter
 class OpenRouterEmbeddingFunction {
   private apiKey: string
   private model: string
+  readonly name = 'openrouter'
 
   constructor({ apiKey, model }: { apiKey: string; model?: string }) {
     this.apiKey = apiKey
     this.model = model || 'nvidia/llama-nemotron-embed-vl-1b-v2:free'
   }
 
+  getConfig() {
+    return { model: this.model, source: 'env' }
+  }
+
   async generate(texts: string[]): Promise<number[][]> {
+    const key = this.apiKey || process.env.OPENAI_API_KEY
     const res = await fetch(`${OPENROUTER_BASE}/embeddings`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model: this.model, input: texts }),
@@ -116,7 +122,7 @@ export function loadDocuments(): { id: string; content: string; metadata: Record
       for (const doc of data.documents ?? []) {
         if (typeof doc?.contentFile !== 'string' || !doc.contentFile.endsWith('.md')) continue
 
-        const mdPath = join(lessonDir, doc.contentFile)
+        const mdPath = join(lessonDir, basename(doc.contentFile))
         let mdContent: string
         try {
           mdContent = readFileSync(mdPath, 'utf-8')
