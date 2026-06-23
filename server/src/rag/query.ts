@@ -2,28 +2,27 @@ import 'dotenv/config'
 import { ChatOpenAI } from '@langchain/openai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { StringOutputParser } from '@langchain/core/output_parsers'
-import { ensureIndex, getQueryFn } from './vectorStore.js'
+import { ensureIndex, ensureWebIndex, queryAll } from './vectorStore.js'
 
 export async function initRag(): Promise<void> {
   await ensureIndex()
+  await ensureWebIndex()
 }
 
 export async function queryRag(question: string): Promise<{ answer: string; sources: string[] }> {
-  const docs = await getQueryFn()(question, 3)
+  const docs = await queryAll(question)
 
   const model = new ChatOpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     model: 'nvidia/nemotron-3-super-120b-a12b:free',
-    temperature: 0,
+    temperature: 0.3,
     configuration: { baseURL: 'https://openrouter.ai/api/v1' },
   })
 
   const prompt = ChatPromptTemplate.fromMessages([
-    ['system', `You are an assistant for the Nodomia programming course.
-Answer based on the provided context. Do not output the raw document text.
-If the context does not contain the answer, say:
+    ['system', `You are an assistant for a React course. Answer in your own words using the provided context. Do not copy the context text verbatim — paraphrase. If you include code examples, write your own, do not copy from the context. If the context does not contain the answer, say:
 "В моей базе знаний не нашлось ответа на этот вопрос. Попробуйте самостоятельно поискать ответ."
-Do not use any external knowledge.`],
+Be brief.`],
     ['human', 'Context: {context}\n\nQuestion: {question}'],
   ])
 

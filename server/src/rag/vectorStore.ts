@@ -1,57 +1,21 @@
-import 'dotenv/config'
 import { ChromaClient } from 'chromadb'
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'node:fs'
 import { join, dirname, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-
-const OPENROUTER_BASE = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1'
-
-// кастомный класс (адаптер) эмбеддингов для ChromaDB
-// ChromaDB ожидает интерфейс { generate(texts: string[]): number[][], name?: string, getConfig?(): any }
-// штатный OpenAIEmbeddingFunction не умеет работать через OpenRouter
-class OpenRouterEmbeddingFunction {
-  private apiKey: string
-  private model: string
-  readonly name = 'openrouter'
-
-  constructor({ apiKey, model }: { apiKey: string; model?: string }) {
-    this.apiKey = apiKey
-    this.model = model || 'nvidia/llama-nemotron-embed-vl-1b-v2:free'
-  }
-
-  getConfig() {
-    return { model: this.model, source: 'env' }
-  }
-
-  async generate(texts: string[]): Promise<number[][]> {
-    const key = this.apiKey || process.env.OPENAI_API_KEY
-    const res = await fetch(`${OPENROUTER_BASE}/embeddings`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model: this.model, input: texts }),
-    })
-    if (!res.ok) {
-      const err = await res.text()
-      throw new Error(`OpenRouter embedding failed (${res.status}): ${err}`)
-    }
-    const json = await res.json()
-    // OpenRouter возвращает массив в произвольном порядке — сортируем по index
-    return json.data.sort((a: any, b: any) => a.index - b.index).map((d: any) => d.embedding)
-  }
-}
+import { OpenRouterEmbeddingFunction } from './embeddings.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const COLLECTION_NAME = 'nodomia'
-const CHROMA_URL = 'http://localhost:8000'
+const WEB_COLLECTION = 'web-docs'
+export const CHROMA_URL = 'http://localhost:8000'
 const CHROMA_DATA_DIR = join(__dirname, '..', '..', 'data', 'chroma')
 export const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
 const CHECKSUM_FILE = join(CHROMA_DATA_DIR, 'checksum.txt')
+const WEB_CHECKSUM_FILE = join(CHROMA_DATA_DIR, 'web-checksum.txt')
+const WEB_SOURCES_DIR = join(__dirname, '..', '..', 'data', 'web-sources')
 
 export interface DocumentResult {
   pageContent: string | null
@@ -59,7 +23,9 @@ export interface DocumentResult {
 }
 
 let queryCollection: ((text: string, k?: number) => Promise<DocumentResult[]>) | null = null
+let webQueryCollection: ((text: string, k?: number) => Promise<DocumentResult[]>) | null = null
 
+// Вычисляет SHA-256 хэш от всех lesson.json и .md файлов в LESSONS_DIR.
 export function computeChecksum(): string {
   const files: string[] = []
 
@@ -77,7 +43,25 @@ export function computeChecksum(): string {
   for (const file of files) hash.update(readFileSync(file))
   return hash.digest('hex')
 }
+// Вычисляет SHA-256 хэш от всех `*.json` файлов в `web-sources/`
+function computeWebChecksum(): string {
+  if (!existsSync(WEB_SOURCES_DIR)) return ''
 
+  const files = readdirSync(WEB_SOURCES_DIR)
+    .filter(f => f.endsWith('.json'))
+    .sort()
+    .map(f => join(WEB_SOURCES_DIR, f))
+
+  if (files.length === 0) return ''
+
+  const hash = createHash('sha256')
+  for (const file of files) hash.update(readFileSync(file))
+  return hash.digest('hex')
+}
+
+// Загружает все документы курса из LESSONS_DIR.
+// Читает lesson.json → contentFile → содержимое .md файла.
+// Возвращает массив { id, content, metadata } для индексации в ChromaDB.
 export function loadDocuments(): { id: string; content: string; metadata: Record<string, string> }[] {
   const results: { id: string; content: string; metadata: Record<string, string> }[] = []
 
@@ -197,7 +181,71 @@ export async function ensureIndex(): Promise<void> {
   }
 }
 
+export async function ensureWebIndex(): Promise<void> {
+  mkdirSync(CHROMA_DATA_DIR, { recursive: true })
+
+  const client = new ChromaClient({ path: CHROMA_URL })
+  const embedder = new OpenRouterEmbeddingFunction({
+    apiKey: process.env.OPENAI_API_KEY!,
+    model: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
+  })
+
+  const current = computeWebChecksum()
+  let prev = ''
+  try { prev = readFileSync(WEB_CHECKSUM_FILE, 'utf-8').trim() } catch { /* not exist */ }
+
+  if (current && current !== prev) {
+    try { await client.deleteCollection({ name: WEB_COLLECTION }) } catch { /* not exist */ }
+    const collection = await client.createCollection({ name: WEB_COLLECTION, embeddingFunction: embedder, metadata: { 'hnsw:space': 'cosine' } })
+
+    const { loadWebSources, scrapeUrls } = await import('./webFetcher.js')
+    const sources = loadWebSources(WEB_SOURCES_DIR)
+    if (sources.length > 0) {
+      const chunks = await scrapeUrls(sources)
+      if (chunks.length > 0) {
+        const batchSize = 100
+        for (let i = 0; i < chunks.length; i += batchSize) {
+          const batch = chunks.slice(i, i + batchSize)
+          await collection.add({
+            ids: batch.map(c => c.id),
+            documents: batch.map(c => c.content),
+            metadatas: batch.map(c => c.metadata),
+          })
+        }
+        console.log(`Indexed ${chunks.length} web chunks into ${WEB_COLLECTION}`)
+      }
+    }
+
+    writeFileSync(WEB_CHECKSUM_FILE, current)
+  }
+
+  webQueryCollection = async (text: string, k = 3) => {
+    const collection = await client.getCollection({ name: WEB_COLLECTION, embeddingFunction: embedder })
+    const r = await collection.query({ queryTexts: [text], nResults: k })
+    return (r.documents?.[0] ?? []).map((content: string | null, i: number) => ({
+      pageContent: content,
+      metadata: {
+        ...(r.metadatas?.[0]?.[i] ?? {}) as Record<string, string>,
+        _collection: 'web',
+      },
+    }))
+  }
+}
+
 export function getQueryFn(): (text: string, k?: number) => Promise<DocumentResult[]> {
   if (!queryCollection) throw new Error('ChromaDB not initialized. Call ensureIndex() first.')
   return queryCollection
+}
+
+export function getWebQueryFn(): (text: string, k?: number) => Promise<DocumentResult[]> {
+  if (!webQueryCollection) throw new Error('Web docs not initialized. Call ensureWebIndex() first.')
+  return webQueryCollection
+}
+
+export async function queryAll(text: string): Promise<DocumentResult[]> {
+  const [courseDocs, webDocs] = await Promise.all([
+    getQueryFn()(text, 2),
+    getWebQueryFn()(text, 2),
+  ])
+  return [...webDocs, ...courseDocs]
 }
