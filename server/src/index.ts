@@ -16,11 +16,11 @@ initRag()
 // Запрос к RAG: вопрос от пользователя → ответ по материалам курса
 app.post('/api/query', async (c) => {
   if (!ready) return c.json({ error: 'RAG not ready' }, 503)
-  const { question } = await c.req.json()
+  const { question, history } = await c.req.json()
   if (!question || typeof question !== 'string') {
     return c.json({ error: 'question is required' }, 400)
   }
-  const result = await queryRag(question)
+  const result = await queryRag(question, history)
   return c.json(result)
 })
 

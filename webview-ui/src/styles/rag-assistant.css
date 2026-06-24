@@ -205,19 +205,58 @@
   max-width: 80%;
   word-wrap: break-word;
   line-height: 1.4;
-  white-space: pre-wrap;
 }
 
 .rag-sidepanel .rsp-msg--user {
   align-self: flex-end;
   background: #007acc;
   color: #fff;
+  white-space: pre-wrap;
 }
 
 .rag-sidepanel .rsp-msg--assistant {
   align-self: flex-start;
   background: rgba(156, 163, 175, 0.15);
   color: var(--text-primary);
+  white-space: normal;}
+
+.rag-sidepanel .rsp-msg--assistant p {
+  margin: 0 0 6px;
+}
+
+.rag-sidepanel .rsp-msg--assistant p:last-child {
+  margin-bottom: 0;
+}
+
+.rag-sidepanel .rsp-msg--assistant pre {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rag-sidepanel .rsp-msg--assistant code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.rag-sidepanel .rsp-msg--assistant :not(pre) > code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.rag-sidepanel .rsp-msg--assistant ul,
+.rag-sidepanel .rsp-msg--assistant ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.rag-sidepanel .rsp-msg--assistant li {
+  margin-bottom: 2px;
 }
 
 @keyframes rsp-blink {

@@ -1,9 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
-
-export interface ChatMessage {
-  role: 'user' | 'assistant'
-  text: string
-}
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import type { ChatMessage } from '../../types/messages'
 
 interface RagSidePanelProps {
   isOpen: boolean
@@ -115,7 +114,11 @@ export default function RagSidePanel({
         ) : (
           messages.map((msg, i) => (
             <div key={i} className={`rsp-msg rsp-msg--${msg.role}`}>
-              {msg.text}
+              {msg.role === 'assistant' ? (
+                <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{msg.text}</Markdown>
+              ) : (
+                msg.text
+              )}
             </div>
           ))
         )}

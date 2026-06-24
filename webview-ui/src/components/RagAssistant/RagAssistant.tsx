@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRagState } from '../../hooks/useRagState'
 import { useVsCodeApi } from '../../hooks/useVsCodeApi'
-import type { ExtensionMessage } from '../../types/messages'
+import type { ExtensionMessage, ChatMessage } from '../../types/messages'
 import '../../styles/rag-assistant.css'
-import RagSidePanel, { type ChatMessage } from './RagSidePanel'
+import RagSidePanel from './RagSidePanel'
 
 export default function RagAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -33,8 +33,9 @@ export default function RagAssistant() {
   const handleSend = useCallback((text: string) => {
     setIsLoading(true)
     setMessages(prev => [...prev, { role: 'user', text }])
-    postMessage({ type: 'askQuestion', payload: text })
-  }, [postMessage])
+    const history = messages.slice(-5)
+    postMessage({ type: 'askQuestion', payload: { question: text, history } })
+  }, [postMessage, messages])
 
   return (
     <>
