@@ -22,7 +22,7 @@
   border-right: none;
   border-radius: 6px 0 0 6px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
   font-size: 10px;
   font-weight: 700;
   color: #9ca3af;
@@ -33,6 +33,10 @@
 
 .rag-handle:hover {
   background: rgba(156, 163, 175, 0.18);
+}
+
+.rag-handle:active {
+  transform: scale(0.96);
 }
 
 .rag-sidepanel {
@@ -113,12 +117,16 @@
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .rag-sidepanel .rsp-header .rsp-close:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
+}
+
+.rag-sidepanel .rsp-header .rsp-close:active {
+  transform: scale(0.96);
 }
 
 .rag-sidepanel .rsp-body {
@@ -186,7 +194,7 @@
   justify-content: center;
   flex-shrink: 0;
   align-self: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .rag-sidepanel .rsp-send-btn:disabled {
@@ -197,6 +205,10 @@
 .rag-sidepanel .rsp-send-btn:not(:disabled):hover {
   background: rgba(156, 163, 175, 0.25);
   color: var(--text-primary);
+}
+
+.rag-sidepanel .rsp-send-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .rag-sidepanel .rsp-msg {

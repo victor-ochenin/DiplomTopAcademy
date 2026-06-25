@@ -60,6 +60,7 @@ body.rag-panel-open .accordion {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  text-wrap: balance;
 }
 
 .accordion-header-right {
@@ -73,7 +74,7 @@ body.rag-panel-open .accordion {
   width: 20px;
   height: 20px;
   color: var(--text-muted);
-  transition: transform 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .chevron.open {
@@ -245,6 +246,7 @@ body.rag-panel-open .accordion {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  text-wrap: balance;
 }
 
 .badge-purple {
@@ -346,6 +348,7 @@ body.rag-panel-open .courses-page {
   font-weight: 700;
   letter-spacing: 0.3px;
   margin-bottom: 16px;
+  text-wrap: balance;
 }
 
 .courses-count {
@@ -412,7 +415,7 @@ body.rag-panel-open .lesson-container {
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
   margin-bottom: 16px;
 }
 
@@ -421,11 +424,16 @@ body.rag-panel-open .lesson-container {
   border-color: var(--border-hover);
 }
 
+.lesson-back:active {
+  transform: scale(0.96);
+}
+
 .lesson-title {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 12px;
   color: var(--text-primary);
+  text-wrap: balance;
 }
 
 .lesson-resources {
@@ -601,11 +609,15 @@ body.rag-panel-open .lesson-container {
   cursor: pointer;
   font-weight: 500;
   font-size: 13px;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .lesson-nav button:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.lesson-nav button:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .lesson-nav button:disabled {
@@ -631,12 +643,16 @@ body.rag-panel-open .lesson-container {
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
   margin-bottom: 12px;
 }
 
 .lesson-page__back:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.lesson-page__back:active {
+  transform: scale(0.96);
 }
 
 .lesson-page__nav {
@@ -682,12 +698,16 @@ body.rag-panel-open .lesson-container {
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
 }
 
 .lesson-page__nav-btn:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.lesson-page__nav-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .lesson-page__nav-btn:disabled {
@@ -783,11 +803,15 @@ body.rag-panel-open .task {
   cursor: pointer;
   font-weight: 500;
   font-size: 13px;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .task__button:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.task__button:active {
+  transform: scale(0.96);
 }
 
 .task__result {
