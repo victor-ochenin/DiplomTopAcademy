@@ -38,6 +38,10 @@ export type Task =
       id: string
       type: 'coding'
       question: string
+      instructions: string
+      criteria: string[]
+      starterCode?: string
+      expectedFiles: string[]
     }
 
 export interface Resource {

@@ -75,6 +75,38 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
         break;
       }
 
+      case 'checkCode': {
+        try {
+          const { taskId, lessonId, filePath } = message.payload;
+          const workspaceFolders = vscode.workspace.workspaceFolders;
+          if (!workspaceFolders) { throw new Error('No workspace open'); }
+          const fullPath = vscode.Uri.joinPath(workspaceFolders[0].uri, filePath);
+          const bytes = await vscode.workspace.fs.readFile(fullPath);
+          const code = new TextDecoder().decode(bytes);
+          const res = await fetch('http://localhost:3001/api/check-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId, lessonId, code }),
+          });
+          if (!res.ok) { throw new Error(`Server error: ${res.status}`); }
+          const result = await res.json();
+          webviewView.webview.postMessage({ type: 'checkResult', payload: result });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown error';
+          const isServerDown = err instanceof TypeError;
+          webviewView.webview.postMessage({
+            type: 'checkResult',
+            payload: {
+              passed: false,
+              feedback: isServerDown
+                ? 'Сервер временно не работает, попробуйте позже'
+                : msg,
+            },
+          });
+        }
+        break;
+      }
+
       default:
         console.warn(`Nodomia: unknown message type: ${(message as any)?.type}`);
     }

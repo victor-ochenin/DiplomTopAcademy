@@ -723,7 +723,7 @@ body.rag-panel-open .lesson-container {
 
 .task {
   margin-top: 20px;
-  padding-top: 16px;
+  padding: 16px 16px 0;
   border-top: 1px solid var(--border);
   transition: padding-right 0.3s ease;
 }
@@ -826,4 +826,51 @@ body.rag-panel-open .task {
 
 .task__result--incorrect {
   color: var(--accent-red);
+}
+
+/* ── Coding Task ── */
+
+.coding-task__instructions {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.coding-task__starter {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.coding-task__criteria {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coding-task__criteria li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding-left: 16px;
+  position: relative;
+}
+
+.coding-task__bullet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--accent-cyan);
+}
+
+.coding-task__bullet::before {
+  content: '•';
 }
