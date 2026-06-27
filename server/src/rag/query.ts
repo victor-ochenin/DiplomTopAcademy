@@ -8,6 +8,7 @@ import { ensureIndex, ensureWebIndex, queryAll } from './vectorStore.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
+export { LESSONS_DIR }
 
 // Инициализация RAG: запускает индексацию документов курсов и веб-источников в ChromaDB.
 // Вызывается однократно при старте сервера. Если чексумма не изменилась — пропускает переиндексацию.
