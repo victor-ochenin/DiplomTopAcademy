@@ -15,7 +15,7 @@ export type WebviewMessage =
   | { type: 'ready' }
   | { type: 'getCourses' }
   | { type: 'askQuestion'; payload: { question: string; history: ChatMessage[] } }
-  | { type: 'checkCode'; payload: { taskId: string; lessonId: string; filePath: string } }
+  | { type: 'checkCode'; payload: { taskId: string; lessonId: string; filePath: string; kind?: string; expectedFiles?: string[] } }
 
 export type ExtensionMessage =
   | { type: 'courses'; payload: Course[] }

@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -10,11 +9,16 @@ import { ensureIndex, ensureWebIndex, queryAll } from './vectorStore.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
 
+// Инициализация RAG: запускает индексацию документов курсов и веб-источников в ChromaDB.
+// Вызывается однократно при старте сервера. Если чексумма не изменилась — пропускает переиндексацию.
 export async function initRag(): Promise<void> {
   await ensureIndex()
   await ensureWebIndex()
 }
 
+// RAG-запрос: ищет релевантные документы по вопросу, формирует контекст и отправляет в LLM.
+// history — опциональная переписка для поддержания контекста диалога.
+// Возвращает ответ и список источников (id документов).
 export async function queryRag(
   question: string,
   history?: { role: string; text: string }[]
@@ -48,10 +52,13 @@ Be brief. Do not use concluding phrases like "Таким образом", "В и
   return { answer, sources: docs.map(d => d.metadata.title).filter(Boolean) }
 }
 
+// Проверяет код пользователя через LLM. Находит задачу по taskId в lesson.json,
+// отправляет код + критерии в LLM, возвращает { passed, feedback }.
 export async function checkCode(
   taskId: string,
   lessonId: string,
-  code: string
+  code: string,
+  _kind?: string
 ): Promise<{ passed: boolean; feedback: string }> {
   const courses = readdirSync(LESSONS_DIR, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)
   let lessonPath = ''
@@ -74,7 +81,7 @@ export async function checkCode(
   const prompt = ChatPromptTemplate.fromMessages([
     ['system', `You are a code reviewer. Check the provided code against the criteria.
 Return JSON: {{ "passed": true/false, "feedback": "explanation in Russian" }}
-Do NOT fix the code. Do NOT write a solution. Just evaluate.`],
+Do NOT fix the code. Do NOT write a solution. Just evaluate.${_kind === 'project' ? ' The code contains multiple project files separated by "--- filename ---" markers.' : ''}`],
     ['human', `Criteria:\n{criteria}\n\nCode:\n{code}`],
   ])
 

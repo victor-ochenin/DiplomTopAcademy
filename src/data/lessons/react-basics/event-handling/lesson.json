@@ -53,6 +53,22 @@
         "event.preventDefault()",
         "prevent default"
       ]
+    },
+    {
+      "id": "form-submit",
+      "type": "coding",
+      "kind": "file",
+      "question": "Форма с обработчиком submit",
+      "instructions": "Создайте SimpleForm.jsx. Форма с одним полем ввода и кнопкой. При сабмите выводится alert со значением поля.",
+      "criteria": [
+        "Файл SimpleForm.jsx создан",
+        "Есть input с состоянием",
+        "Есть кнопка сабмита",
+        "Сабмит предотвращает перезагрузку",
+        "alert показывает введённое значение"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["SimpleForm.jsx"]
     }
   ],
   "resources": [

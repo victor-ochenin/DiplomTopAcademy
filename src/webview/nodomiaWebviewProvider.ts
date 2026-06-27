@@ -6,7 +6,6 @@ import { loadCoursesAsync } from '../data/courses';
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly context: vscode.ExtensionContext
   ) {}
 
   async resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -77,16 +76,32 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
 
       case 'checkCode': {
         try {
-          const { taskId, lessonId, filePath } = message.payload;
+          const { taskId, lessonId, filePath, kind, expectedFiles } = message.payload;
           const workspaceFolders = vscode.workspace.workspaceFolders;
           if (!workspaceFolders) { throw new Error('No workspace open'); }
-          const fullPath = vscode.Uri.joinPath(workspaceFolders[0].uri, filePath);
-          const bytes = await vscode.workspace.fs.readFile(fullPath);
-          const code = new TextDecoder().decode(bytes);
+
+          let code: string;
+          if (kind === 'project' && expectedFiles?.length) {
+            code = '';
+            for (const f of expectedFiles) {
+              const pattern = '**/' + f.replace(/\\/g, '/');
+              const uris = await vscode.workspace.findFiles(pattern, '**/node_modules/**', 1);
+              if (uris.length > 0) {
+                const bytes = await vscode.workspace.fs.readFile(uris[0]);
+                code += `--- ${f} ---\n${new TextDecoder().decode(bytes)}\n\n`;
+              }
+            }
+            if (!code) { throw new Error('Не найдены файлы проекта. Убедитесь, что вы создали проект.'); }
+          } else {
+            const fullPath = vscode.Uri.joinPath(workspaceFolders[0].uri, filePath);
+            const bytes = await vscode.workspace.fs.readFile(fullPath);
+            code = new TextDecoder().decode(bytes);
+          }
+
           const res = await fetch('http://localhost:3001/api/check-code', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId, lessonId, code }),
+            body: JSON.stringify({ taskId, lessonId, code, kind }),
           });
           if (!res.ok) { throw new Error(`Server error: ${res.status}`); }
           const result = await res.json();

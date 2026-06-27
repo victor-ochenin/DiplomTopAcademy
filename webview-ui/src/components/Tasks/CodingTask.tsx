@@ -26,7 +26,13 @@ export default function CodingTask({ task, lessonId }: CodingTaskProps) {
     setResult(null)
     postMessage({
       type: 'checkCode',
-      payload: { taskId: task.id, lessonId, filePath: task.expectedFiles[0] },
+      payload: {
+        taskId: task.id,
+        lessonId,
+        filePath: task.expectedFiles[0],
+        kind: task.kind,
+        expectedFiles: task.expectedFiles,
+      },
     })
   }
 

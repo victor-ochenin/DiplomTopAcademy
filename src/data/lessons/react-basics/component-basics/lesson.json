@@ -54,6 +54,22 @@
         "хук usestate",
         "хук useState"
       ]
+    },
+    {
+      "id": "greeting-component",
+      "type": "coding",
+      "kind": "file",
+      "question": "Создайте компонент приветствия",
+      "instructions": "Создайте файл Greeting.jsx. Компонент принимает пропс name и выводит 'Привет, {name}!'. Если name не передан — выводит 'Привет, гость!'.",
+      "criteria": [
+        "Компонент — функция",
+        "Принимает пропс name",
+        "Выводит 'Привет, {name}!' когда name передан",
+        "Выводит 'Привет, гость!' когда name не передан",
+        "Экспорт по умолчанию"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["Greeting.jsx"]
     }
   ],
   "resources": [

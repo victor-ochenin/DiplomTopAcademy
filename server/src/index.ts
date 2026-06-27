@@ -27,12 +27,12 @@ app.post('/api/query', async (c) => {
 // Проверка кода пользователя через LLM. Читает lesson.json, находит задачу по taskId,
 // отправляет код + критерии в LLM, возвращает { passed, feedback }.
 app.post('/api/check-code', async (c) => {
-  const { taskId, lessonId, code } = await c.req.json().catch(() => ({}))
+  const { taskId, lessonId, code, kind } = await c.req.json().catch(() => ({}))
   if (typeof taskId !== 'string' || typeof lessonId !== 'string' || typeof code !== 'string') {
     return c.json({ error: 'taskId, lessonId and code are required' }, 400)
   }
   try {
-    const result = await checkCode(taskId, lessonId, code)
+    const result = await checkCode(taskId, lessonId, code, kind)
     return c.json(result)
   } catch (err) {
     console.error('check-code failed', err)

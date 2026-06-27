@@ -1,5 +1,3 @@
-import 'dotenv/config'
-
 const OPENROUTER_BASE = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1'
 
 // кастомный класс (адаптер) эмбеддингов для ChromaDB

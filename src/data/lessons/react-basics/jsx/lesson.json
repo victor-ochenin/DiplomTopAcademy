@@ -43,6 +43,22 @@
       "type": "open",
       "question": "Какой атрибут нужно добавлять каждому элементу при рендеринге списка в React?",
       "acceptableAnswers": ["key", "ключ"]
+    },
+    {
+      "id": "jsx-expression",
+      "type": "coding",
+      "kind": "file",
+      "question": "Использование выражений в JSX",
+      "instructions": "Создайте файл Profile.jsx. Компонент принимает пропсы name и age и выводит:\n- 'Привет, {name}!' внутри <h1>\n- 'Тебе {age} лет' внутри <p>",
+      "criteria": [
+        "Файл Profile.jsx создан",
+        "Компонент — функция",
+        "Использует {name} внутри JSX",
+        "Использует {age} внутри JSX",
+        "Экспорт по умолчанию"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["Profile.jsx"]
     }
   ],
   "resources": [

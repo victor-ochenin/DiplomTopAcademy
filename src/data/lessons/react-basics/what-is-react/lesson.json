@@ -40,6 +40,21 @@
         "создание ui",
         "построение ui"
       ]
+    },
+    {
+      "id": "create-vite-project",
+      "type": "coding",
+      "kind": "project",
+      "question": "Создайте новый React-проект",
+      "instructions": "Создайте новый React-проект через Vite: npm create vite@latest my-app -- --template react. Проверьте, что в проекте есть стандартная структура Vite React.",
+      "criteria": [
+        "Есть package.json",
+        "Есть index.html",
+        "Есть src/main.jsx",
+        "В package.json присутствуют react и react-dom"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["package.json", "index.html", "src/main.jsx"]
     }
   ],
   "resources": [
