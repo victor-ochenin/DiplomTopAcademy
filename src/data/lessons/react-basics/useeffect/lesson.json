@@ -66,6 +66,22 @@
         "устаревшие данные",
         "неактуальное состояние"
       ]
+    },
+    {
+      "id": "timer-component",
+      "type": "coding",
+      "kind": "file",
+      "question": "Таймер с useEffect",
+      "instructions": "Создайте Timer.jsx. Компонент показывает секунды с момента монтирования. Используйте useEffect с setInterval.",
+      "criteria": [
+        "Файл Timer.jsx создан",
+        "Использует useState для секунд",
+        "Использует useEffect с setInterval",
+        "setInterval очищается при размонтировании",
+        "Секунды отображаются на экране"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["Timer.jsx"]
     }
   ],
   "resources": [

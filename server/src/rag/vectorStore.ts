@@ -232,16 +232,20 @@ export async function ensureWebIndex(): Promise<void> {
   }
 }
 
+// Возвращает функцию поиска по документам курсов. Должна вызываться после ensureIndex().
 export function getQueryFn(): (text: string, k?: number) => Promise<DocumentResult[]> {
   if (!queryCollection) throw new Error('ChromaDB not initialized. Call ensureIndex() first.')
   return queryCollection
 }
 
+// Возвращает функцию поиска по веб-источникам. Должна вызываться после ensureWebIndex().
 export function getWebQueryFn(): (text: string, k?: number) => Promise<DocumentResult[]> {
   if (!webQueryCollection) throw new Error('Web docs not initialized. Call ensureWebIndex() first.')
   return webQueryCollection
 }
 
+// Объединяет результаты поиска по документам курсов и веб-источникам.
+// Сначала веб-документы, затем курсы (веб-документы обычно актуальнее).
 export async function queryAll(text: string): Promise<DocumentResult[]> {
   const [courseDocs, webDocs] = await Promise.all([
     getQueryFn()(text, 2),

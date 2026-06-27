@@ -71,7 +71,7 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
         {item.type === 'task' && (() => {
           const task = lesson.tasks?.find(t => t.id === item.id)
           if (!task) return <p>Task not found</p>
-          return <TaskRenderer key={item.id} task={task} />
+          return <TaskRenderer key={item.id} task={task} lessonId={lesson.id} />
         })()}
 
         <div className="lesson-nav" style={{ marginTop: 20 }}>

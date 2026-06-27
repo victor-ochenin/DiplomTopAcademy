@@ -47,6 +47,22 @@
         "default value",
         "defaultvalue"
       ]
+    },
+    {
+      "id": "controlled-input",
+      "type": "coding",
+      "kind": "file",
+      "question": "Контролируемый input",
+      "instructions": "Создайте ColorPicker.jsx. Input type='color', значение в state, текущий цвет показывается как background-color div.",
+      "criteria": [
+        "Файл ColorPicker.jsx создан",
+        "Input привязан к state (controlled)",
+        "Цвет отображается как фон",
+        "Начальное значение — #ff0000",
+        "Экспорт по умолчанию"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["ColorPicker.jsx"]
     }
   ],
   "resources": [

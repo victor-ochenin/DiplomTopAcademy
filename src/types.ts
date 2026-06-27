@@ -37,7 +37,12 @@ export type Task =
   | {
       id: string
       type: 'coding'
+      kind: 'file' | 'project'
       question: string
+      instructions: string
+      criteria: string[]
+      starterCode?: string
+      expectedFiles: string[]
     }
 
 export interface Resource {

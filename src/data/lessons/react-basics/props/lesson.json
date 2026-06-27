@@ -54,6 +54,22 @@
         "Только JSX"
       ],
       "correctAnswer": "Любые JavaScript значения"
+    },
+    {
+      "id": "card-component",
+      "type": "coding",
+      "kind": "file",
+      "question": "Компонент Card с props и children",
+      "instructions": "Создайте Card.jsx. Компонент принимает title и children. Рендерит карточку с заголовком и содержимым.",
+      "criteria": [
+        "Файл Card.jsx создан",
+        "Принимает title и children",
+        "title отображается в заголовке",
+        "children отображается под заголовком",
+        "Экспорт по умолчанию"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["Card.jsx"]
     }
   ],
   "resources": [

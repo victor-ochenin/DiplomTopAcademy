@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "robocopy ..\\src\\data\\lessons .\\data\\lessons /E /NJH /NJS /NDL >nul & exit 0",
     "dev": "npx tsx watch src/index.ts",
     "start": "npx tsx src/index.ts",
     "test": "vitest run",

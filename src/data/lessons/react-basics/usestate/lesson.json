@@ -52,6 +52,22 @@
         "setUser(Object.assign(user, { name: 'Иван' }))"
       ],
       "correctAnswer": "setUser(prev => ({ ...prev, name: 'Иван' }))"
+    },
+    {
+      "id": "counter-component",
+      "type": "coding",
+      "kind": "file",
+      "question": "Создайте компонент счётчика",
+      "instructions": "Создайте файл Counter.jsx в корне открытой папки. Компонент должен отображать текущее значение, иметь кнопки + и -, начинаться с 0.",
+      "criteria": [
+        "Компонент определён как функция",
+        "Есть состояние count, начальное значение 0",
+        "Кнопка '+' увеличивает count на 1",
+        "Кнопка '-' уменьшает count на 1",
+        "Компонент экспортируется по умолчанию"
+      ],
+      "starterCode": "",
+      "expectedFiles": ["Counter.jsx"]
     }
   ],
   "resources": [

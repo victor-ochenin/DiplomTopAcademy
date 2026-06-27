@@ -6,12 +6,19 @@ export interface ChatMessage {
   text: string
 }
 
+export interface CheckResult {
+  passed: boolean
+  feedback: string
+}
+
 export type WebviewMessage =
   | { type: 'ready' }
   | { type: 'getCourses' }
   | { type: 'askQuestion'; payload: { question: string; history: ChatMessage[] } }
+  | { type: 'checkCode'; payload: { taskId: string; lessonId: string; filePath: string; kind?: string; expectedFiles?: string[] } }
 
 export type ExtensionMessage =
   | { type: 'courses'; payload: Course[] }
   | { type: 'answer'; payload: string }
   | { type: 'ragError'; payload: string }
+  | { type: 'checkResult'; payload: CheckResult }
