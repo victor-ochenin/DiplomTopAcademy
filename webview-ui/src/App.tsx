@@ -27,27 +27,18 @@ export default function App() {
     }
   }, []);
 
-  const { postMessage, getState, setState } = useVsCodeApi(handleMessage);
+  const { postMessage } = useVsCodeApi(handleMessage);
 
   useEffect(() => {
     postMessage({ type: 'getCourses' });
     postMessage({ type: 'loadProgress' });
   }, [postMessage]);
 
-  // восстанавливаем сохранённый прогресс из локального кеша (мгновенно)
-  useEffect(() => {
-    const saved = getState()
-    if (saved?.completedTasks) {
-      setProgress({ completedTasks: saved.completedTasks as Record<string, boolean> })
-    }
-  }, [getState])
-
-  // сохраняем прогресс в webview-кеш + extension host
+  // сохраняем прогресс в extension host
   useEffect(() => {
     if (!hasHydratedProgress) return
-    setState(progress as unknown as Record<string, unknown>)
     postMessage({ type: 'saveProgress', payload: progress })
-  }, [progress, hasHydratedProgress, setState, postMessage])
+  }, [progress, hasHydratedProgress, postMessage])
 
   const completeItem = useCallback((lessonId: string, itemId: string) => {
     setProgress(prev => ({
