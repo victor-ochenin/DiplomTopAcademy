@@ -1,14 +1,14 @@
-import type { Course } from '../../types/messages'
+import type { Course, UserProgress } from '../../types/messages'
 import CourseCard from './CourseCard'
 import { pluralize } from '../../utils/plural'
-import '../../styles/components.css'
 
 interface CoursesPageProps {
   courses: Course[]
   onSelectCourse: (id: string) => void
+  progress: UserProgress
 }
 
-export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProps) {
+export default function CoursesPage({ courses, onSelectCourse, progress }: CoursesPageProps) {
   const count = courses.length
 
   return (
@@ -37,6 +37,7 @@ export default function CoursesPage({ courses, onSelectCourse }: CoursesPageProp
             key={course.id}
             course={course}
             onEnter={() => onSelectCourse(course.id)}
+            progress={progress}
           />
         ))}
       </div>

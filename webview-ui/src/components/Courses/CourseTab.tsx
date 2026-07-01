@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Course } from '../../types/messages'
+import type { Course, UserProgress } from '../../types/messages'
 import LessonView from '../LessonView'
 import TaskRenderer from '../Tasks/TaskRenderer'
-import '../../styles/components.css'
 
 interface CourseTabProps {
   course: Course
   onBack: () => void
+  progress: UserProgress
+  onCompleteItem: (lessonId: string, itemId: string) => void
 }
 
 interface NavItem {
@@ -21,7 +22,7 @@ interface ActiveItem {
   itemIndex: number
 }
 
-export default function CourseTab({ course, onBack }: CourseTabProps) {
+export default function CourseTab({ course, onBack, progress, onCompleteItem }: CourseTabProps) {
   const [openLessonId, setOpenLessonId] = useState<string | null>(null)
   const [activeItem, setActiveItem] = useState<ActiveItem | null>(null)
 
@@ -39,6 +40,17 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
     })
     return map
   }, [course])
+
+  // процент выполнения урока: (пройденные документы + задачи) / всего элементов
+  const lessonProgressMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const lesson of course.lessons) {
+      const items = lessonItemsMap.get(lesson.id) ?? []
+      const done = items.filter(i => progress.completedTasks[`${lesson.id}:${i.id}`]).length
+      map.set(lesson.id, items.length > 0 ? Math.round((done / items.length) * 100) : 0)
+    }
+    return map
+  }, [course, lessonItemsMap, progress])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -71,12 +83,16 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
         {item.type === 'task' && (() => {
           const task = lesson.tasks?.find(t => t.id === item.id)
           if (!task) return <p>Task not found</p>
-          return <TaskRenderer key={item.id} task={task} lessonId={lesson.id} />
+          return <TaskRenderer key={item.id} task={task} lessonId={lesson.id} onCompleteItem={onCompleteItem} />
         })()}
 
         <div className="lesson-nav" style={{ marginTop: 20 }}>
           <button
-            onClick={() => setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex - 1 })}
+            onClick={() => {
+              const prev = lessonItems[activeItem.itemIndex - 1]
+              if (prev?.type === 'document') onCompleteItem(activeItem.lessonId, prev.id)
+              setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex - 1 })
+            }}
             disabled={activeItem.itemIndex === 0}
           >
             ←
@@ -85,7 +101,11 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
             {activeItem.itemIndex + 1} / {lessonItems.length}
           </span>
           <button
-            onClick={() => setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex + 1 })}
+            onClick={() => {
+              const next = lessonItems[activeItem.itemIndex + 1]
+              if (next?.type === 'document') onCompleteItem(activeItem.lessonId, next.id)
+              setActiveItem({ lessonId: activeItem.lessonId, itemIndex: activeItem.itemIndex + 1 })
+            }}
             disabled={activeItem.itemIndex === lessonItems.length - 1}
           >
             →
@@ -113,56 +133,67 @@ export default function CourseTab({ course, onBack }: CourseTabProps) {
           const items = lessonItemsMap.get(lesson.id) ?? []
 
           return (
-            <div key={lesson.id} className="accordion-item">
-              <div
-                className="accordion-header"
-                onClick={() => setOpenLessonId(isOpen ? null : lesson.id)}
-              >
-                <span className="accordion-title">{lesson.title}</span>
-                <svg
-                  className={`chevron${isOpen ? ' open' : ''}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <div key={lesson.id} className="accordion-item">
+                <div
+                  className="accordion-header"
+                  onClick={() => setOpenLessonId(isOpen ? null : lesson.id)}
                 >
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </div>
+                  <span className="accordion-title">{lesson.title}</span>
+                  {/* процент выполнения урока (только если есть прогресс) */}
+                  {(lessonProgressMap.get(lesson.id) ?? 0) > 0 && <span className="lesson-progress">{lessonProgressMap.get(lesson.id)}%</span>}
+                  <svg
+                    className={`chevron${isOpen ? ' open' : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </div>
 
-              <div className={`accordion-body${isOpen ? ' open' : ''}`}>
-                <div className="accordion-content">
-                  {items.map((item, idx) => {
-                    // Возвращаем JSX для одного элемента списка (документ или задача)
-                    return (
-                      <div
-                        key={item.id}
-                        className="lesson-item"
-                        onClick={() => setActiveItem({ lessonId: lesson.id, itemIndex: idx })}
-                      >
-                        <div className={`lesson-type-icon ${item.type === 'task' ? 'challenge' : 'lesson'}`}>
-                          {item.type === 'task' ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="3" y="3" width="7" height="7" rx="1"/>
-                              <rect x="14" y="3" width="7" height="7" rx="1"/>
-                              <rect x="3" y="14" width="7" height="7" rx="1"/>
-                              <rect x="14" y="14" width="7" height="7" rx="1"/>
-                            </svg>
-                          )}
+                <div className={`accordion-body${isOpen ? ' open' : ''}`}>
+                  <div className="accordion-content">
+                    {items.map((item, idx) => {
+                      // true если элемент уже пройден (зелёная иконка)
+                      const isCompleted = progress.completedTasks[`${lesson.id}:${item.id}`]
+                      const typeClass = item.type === 'task' ? 'challenge' : 'lesson'
+                      return (
+                        <div
+                          key={item.id}
+                          className="lesson-item"
+                          onClick={() => {
+                            // отмечаем документ как прочитанный при клике
+                            if (item.type === 'document') {
+                              onCompleteItem(lesson.id, item.id)
+                            }
+                            setActiveItem({ lessonId: lesson.id, itemIndex: idx })
+                          }}
+                        >
+                          {/* иконка становится зелёной, если элемент пройден */}
+                          <div className={`lesson-type-icon ${typeClass}${isCompleted ? ' completed' : ''}`}>
+                            {item.type === 'task' ? (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="lesson-name">{item.title}</span>
                         </div>
-                        <span className="lesson-name">{item.title}</span>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
           )
         })}
       </div>
