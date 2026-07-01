@@ -6,6 +6,7 @@ import { loadCoursesAsync } from '../data/courses';
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly extensionUri: vscode.Uri,
+    private readonly context: vscode.ExtensionContext,
   ) {}
 
   async resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -42,6 +43,17 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
     switch (message.type) {
       case 'ready':
         break;
+
+      case 'loadProgress': {
+        const saved = this.context.workspaceState.get('nodomia.progress') ?? { completedTasks: {} };
+        webviewView.webview.postMessage({ type: 'progress', payload: saved });
+        break;
+      }
+
+      case 'saveProgress': {
+        await this.context.workspaceState.update('nodomia.progress', message.payload);
+        break;
+      }
       
       // Запрос списка курсов для инициализации UI
       case 'getCourses': {

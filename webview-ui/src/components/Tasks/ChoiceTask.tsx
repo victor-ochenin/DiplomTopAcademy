@@ -4,17 +4,20 @@ import '../../styles/components.css'
 
 interface ChoiceTaskProps {
   task: Extract<Task, { type: 'choice' }>
+  onComplete?: () => void
 }
 
-export default function ChoiceTask({ task }: ChoiceTaskProps) {
+export default function ChoiceTask({ task, onComplete }: ChoiceTaskProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const [checked, setChecked] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
 
   const handleCheck = () => {
     if (!selected) return
-    setIsCorrect(selected === task.correctAnswer)
+    const correct = selected === task.correctAnswer
+    setIsCorrect(correct)
     setChecked(true)
+    if (correct) onComplete?.()
   }
 
   return (

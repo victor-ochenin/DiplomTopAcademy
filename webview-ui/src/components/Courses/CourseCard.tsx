@@ -1,15 +1,32 @@
-import type { Course } from '../../types/messages'
+import type { Course, UserProgress } from '../../types/messages'
 import { pluralize } from '../../utils/plural'
-import '../../styles/components.css'
 
 interface CourseCardProps {
   course: Course
   onEnter: () => void
+  progress?: UserProgress
 }
 
-export default function CourseCard({ course, onEnter }: CourseCardProps) {
+function progressColor(pct: number): string {
+  return pct === 100 ? '#29b6f6' : '#4fc3f7'
+}
+
+export default function CourseCard({ course, onEnter, progress }: CourseCardProps) {
   const lessonCount = course.lessons.length
-  const taskCount = course.lessons.reduce((s, l) => s + (l.tasks?.length ?? 0), 0)
+
+  let totalItems = 0
+  let completedItems = 0
+  for (const lesson of course.lessons) {
+    for (const doc of lesson.documents ?? []) {
+      totalItems++
+      if (progress?.completedTasks[`${lesson.id}:${doc.id}`]) completedItems++
+    }
+    for (const task of lesson.tasks ?? []) {
+      totalItems++
+      if (progress?.completedTasks[`${lesson.id}:${task.id}`]) completedItems++
+    }
+  }
+  const percent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
 
   return (
     <div className="card-wrapper">
@@ -31,6 +48,7 @@ export default function CourseCard({ course, onEnter }: CourseCardProps) {
               <span className="card-subtitle">React 19</span>
             </div>
           </div>
+          {percent > 0 && <span className="card-progress" style={{ color: progressColor(percent) }}>{percent}%</span>}
         </div>
 
         <span className={`level-badge level-${course.level}`}>
@@ -53,7 +71,7 @@ export default function CourseCard({ course, onEnter }: CourseCardProps) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
-            <span>{taskCount} {pluralize(taskCount, 'задание', 'задания', 'заданий')}</span>
+            <span>{totalItems} {pluralize(totalItems, 'задание', 'задания', 'заданий')}</span>
           </div>
         </div>
       </div>

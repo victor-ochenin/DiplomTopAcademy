@@ -6,9 +6,10 @@ import '../../styles/components.css'
 interface CodingTaskProps {
   task: Extract<Task, { type: 'coding' }>
   lessonId: string
+  onCompleteItem?: (lessonId: string, itemId: string) => void
 }
 
-export default function CodingTask({ task, lessonId }: CodingTaskProps) {
+export default function CodingTask({ task, lessonId, onCompleteItem }: CodingTaskProps) {
   const [result, setResult] = useState<CheckResult | null>(null)
   const [isChecking, setIsChecking] = useState(false)
 
@@ -17,8 +18,11 @@ export default function CodingTask({ task, lessonId }: CodingTaskProps) {
       if (msg.type === 'checkResult') {
         setResult(msg.payload)
         setIsChecking(false)
+        if (msg.payload.passed) {
+          onCompleteItem?.(lessonId, task.id)
+        }
       }
-    }, [])
+    }, [lessonId, task.id, onCompleteItem])
   )
 
   const handleCheck = () => {

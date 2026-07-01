@@ -4,9 +4,10 @@ import '../../styles/components.css'
 
 interface OpenTaskProps {
   task: Extract<Task, { type: 'open' }>
+  onComplete?: () => void
 }
 
-export default function OpenTask({ task }: OpenTaskProps) {
+export default function OpenTask({ task, onComplete }: OpenTaskProps) {
   const [answer, setAnswer] = useState('')
   const [checked, setChecked] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
@@ -18,6 +19,7 @@ export default function OpenTask({ task }: OpenTaskProps) {
     )
     setIsCorrect(!!match)
     setChecked(true)
+    if (match) onComplete?.()
   }
 
   return (
