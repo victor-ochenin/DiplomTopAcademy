@@ -45,15 +45,26 @@ body.rag-panel-open .accordion {
   gap: 12px;
 }
 
-.react-icon-small {
-  width: 32px;
-  height: 32px;
+.course-icon {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.react-icon-small svg {
+.course-icon svg {
   width: 100%;
   height: 100%;
+}
+
+.course-icon--fallback {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
 }
 
 .accordion-title {
@@ -218,16 +229,7 @@ body.rag-panel-open .accordion {
   gap: 8px;
 }
 
-.react-icon {
-  width: 28px;
-  height: 28px;
-  position: relative;
-}
 
-.react-icon svg {
-  width: 100%;
-  height: 100%;
-}
 
 .card-title-group {
   display: flex;
@@ -352,35 +354,6 @@ body.rag-panel-open .courses-page {
 }
 
 .courses-count {
-  color: #8b8ba7;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.courses-icon-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.courses-icon {
-  width: 36px;
-  height: 36px;
-}
-
-.courses-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.courses-icon-label {
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.courses-icon-count {
   color: #8b8ba7;
   font-size: 14px;
   font-weight: 500;

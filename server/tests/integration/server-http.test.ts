@@ -23,7 +23,6 @@ beforeAll(async () => {
   // queryRag возвращает предсказуемый ответ — без вызова OpenRouter
   mockQueryRag.mockResolvedValue({
     answer: 'useState — это хук для состояния',
-    sources: ['useState Basics'],
   })
   // checkCode возвращает предсказуемый ответ
   mockCheckCode.mockResolvedValue({ passed: true, feedback: 'ok' })
@@ -40,7 +39,6 @@ describe('POST /api/query', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.answer).toBe('useState — это хук для состояния')
-    expect(body.sources).toContain('useState Basics')
   })
 
   it('returns 400 for empty body', async () => {

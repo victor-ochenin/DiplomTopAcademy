@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Course, Lesson, Task, Resource } from '../../types';
+import type { Course, Lesson, Task, Resource, CourseListItem } from '../../types';
 
 let basePath = '';
 
@@ -12,7 +12,8 @@ export function initCourses(base: string) {
   basePath = base;
 }
 
-let cached: Course[] | null = null;
+let listCache: CourseListItem[] | null = null;
+let detailsCache = new Map<string, Course>();
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
@@ -105,6 +106,7 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
   const title = data.title;
   const description = data.description;
   const level = isValidLevel(data.level) ? data.level : 'beginner';
+  const icon = isNonEmptyString(data.icon) ? data.icon : undefined;
 
   if (!isNonEmptyString(id) || !isNonEmptyString(title)) {
     console.warn(`Nodomia: course ${filePath} missing required fields (id, title)`);
@@ -124,19 +126,26 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
     title,
     description: isNonEmptyString(description) ? description : '',
     level,
+    icon,
     lessons,
   };
 }
 
-export async function loadCoursesAsync(): Promise<Course[]> {
-  if (cached) { return cached; }
-  if (!basePath) {
-    console.error('Nodomia: CourseLoader not initialized');
-    return [];
-  }
+async function readLessonMetaAsync(ref: string): Promise<{ id: string; docCount: number; taskCount: number }> {
+  const raw = await loadFileAsync(path.join(basePath, ref));
+  if (!raw) { return { id: '', docCount: 0, taskCount: 0 }; }
+  const data = parseJsonSafe(raw, `lesson meta ${ref}`);
+  if (!data || typeof data !== 'object') { return { id: '', docCount: 0, taskCount: 0 }; }
+  const d = data as Record<string, unknown>;
+  return {
+    id: isNonEmptyString(d.id) ? d.id : '',
+    docCount: Array.isArray(d.documents) ? (d.documents as any[]).length : 0,
+    taskCount: Array.isArray(d.tasks) ? d.tasks.length : 0,
+  };
+}
 
+async function getJsonFiles(): Promise<string[]> {
   const coursesDir = path.join(basePath, 'src', 'data', 'courses');
-
   let files: string[];
   try {
     files = await fs.promises.readdir(coursesDir);
@@ -144,20 +153,88 @@ export async function loadCoursesAsync(): Promise<Course[]> {
     console.error(`Nodomia: failed to read courses directory ${coursesDir}`, err);
     return [];
   }
+  return files.filter(f => f.endsWith('.json') && f.length > 5).map(f => path.join(coursesDir, f));
+}
 
-  const jsonFiles = files.filter(f => f.endsWith('.json') && f.length > 5);
+export async function loadCourseListAsync(): Promise<CourseListItem[]> {
+  if (listCache) { return listCache; }
+  if (!basePath) {
+    console.error('Nodomia: CourseLoader not initialized');
+    return [];
+  }
 
-  const courses = (await Promise.all(
-    jsonFiles.map(file => parseCourseAsync(path.join(coursesDir, file)))
-  )).filter((c: Course | null): c is Course => c !== null);
+  const files = await getJsonFiles();
+
+  const rawCourses = await Promise.all(files.map(f => loadFileAsync(f)));
+
+  const results = await Promise.all(
+    rawCourses.map(async (raw, i) => {
+      if (!raw) { return null; }
+      const data = parseJsonSafe(raw, `course ${files[i]}`);
+      if (!data || typeof data !== 'object') { return null; }
+      const d = data as Record<string, unknown>;
+      const id = d.id;
+      const title = d.title;
+      const description = d.description;
+      const level = isValidLevel(d.level) ? d.level : 'beginner';
+      const icon = isNonEmptyString(d.icon) ? d.icon : undefined;
+      if (!isNonEmptyString(id) || !isNonEmptyString(title)) { return null; }
+
+      const lessonRefs = Array.isArray(d.lessons) ? d.lessons : [];
+      const lessonCount = lessonRefs.length;
+
+      const metas = await Promise.all(
+        lessonRefs
+          .filter((r): r is string => isNonEmptyString(r))
+          .map(r => readLessonMetaAsync(r))
+      );
+
+      let taskCount = 0;
+      let itemsCount = 0;
+      const lessonIds: string[] = [];
+      for (const meta of metas) {
+        if (meta.id) { lessonIds.push(meta.id); }
+        taskCount += meta.taskCount;
+        itemsCount += meta.docCount + meta.taskCount;
+      }
+
+      return { id, title, description: isNonEmptyString(description) ? description : '', level, icon, lessonCount, taskCount, itemsCount, lessonIds } as CourseListItem;
+    })
+  );
+
+  const items = results.filter((r): r is CourseListItem => r !== null);
 
   const levelOrder: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
-  courses.sort((a, b) => {
-    const ao = levelOrder[a.level] ?? 0;
-    const bo = levelOrder[b.level] ?? 0;
-    return ao - bo;
-  });
+  items.sort((a, b) => (levelOrder[a.level] ?? 0) - (levelOrder[b.level] ?? 0));
 
-  cached = courses;
-  return courses;
+  listCache = items;
+  return items;
 }
+
+export async function loadCourseDetailsAsync(id: string): Promise<Course | null> {
+  if (detailsCache.has(id)) { return detailsCache.get(id) ?? null; }
+  if (!basePath) {
+    console.error('Nodomia: CourseLoader not initialized');
+    return null;
+  }
+
+  const files = await getJsonFiles();
+
+  const rawCourses = await Promise.all(files.map(f => loadFileAsync(f)));
+
+  for (let i = 0; i < files.length; i++) {
+    const raw = rawCourses[i];
+    if (!raw) { continue; }
+    const data = parseJsonSafe(raw, `course ${files[i]}`);
+    if (!data || typeof data !== 'object') { continue; }
+    if ((data as Record<string, unknown>).id === id) {
+      const course = await parseCourseAsync(files[i]);
+      if (course) { detailsCache.set(id, course); }
+      return course;
+    }
+  }
+
+  return null;
+}
+
+

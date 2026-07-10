@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "robocopy ..\\src\\data\\lessons .\\data\\lessons /E /NJH /NJS /NDL >nul & exit 0",
+    "predev": "node -e \"const fs=require('fs');fs.rmSync('./data/lessons', {recursive:true,force:true});fs.cpSync('../nodomia/src/data/lessons', './data/lessons', {recursive:true})\"",
     "dev": "npx tsx watch src/index.ts",
     "start": "npx tsx src/index.ts",
     "test": "vitest run",

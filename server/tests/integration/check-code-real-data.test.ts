@@ -41,7 +41,9 @@ try {
   // data/lessons может отсутствовать в CI — тест просто пропустит проверку данных
 }
 
-const mockRunnable = { pipe: vi.fn().mockReturnThis(), invoke: vi.fn() }
+import { createMockLLM } from '../helpers/test-utils'
+
+const { mockRunnable } = createMockLLM()
 
 vi.mock('@langchain/core/prompts', () => ({
   ChatPromptTemplate: { fromMessages: vi.fn().mockReturnValue(mockRunnable) },

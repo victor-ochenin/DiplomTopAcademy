@@ -1,68 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { createMockFS } from '../helpers/test-utils'
 
-// Виртуальная файловая система
-// Вместо работы с реальными уроками тесты наполняют in-memory Map,
-// а vi.mock('node:fs') перенаправляет readFileSync / readdirSync / existsSync
-// в эту карту. Так тесты быстры, детерминированы и не зависят от окружения.
+const { mockFS, addFile, addDir, mockImpl } = createMockFS()
 
-const mockFS = new Map<string, { isDirectory: boolean; content?: string }>()
-
-function addFile(path: string, content: string) {
-  mockFS.set(normalize(path), { isDirectory: false, content })
-}
-
-function addDir(path: string) {
-  mockFS.set(normalize(path), { isDirectory: true })
-}
-
-function normalize(p: string) {
-  return p.replace(/\\/g, '/')
-}
-
-vi.mock('node:fs', () => ({
-  // readFileSync — возвращает содержимое из mockFS, либо кидает ENOENT
-  readFileSync: vi.fn((path: string) => {
-    const p = normalize(path)
-    const file = mockFS.get(p)
-    if (!file || file.isDirectory) {
-      const err = new Error(`ENOENT: ${p}`) as NodeJS.ErrnoException
-      err.code = 'ENOENT'
-      throw err
-    }
-    return file.content
-  }),
-
-  // readdirSync({ withFileTypes: true }) — возвращает Dirent-подобные объекты
-  readdirSync: vi.fn((path: string) => {
-    const p = normalize(path)
-    const entries: { name: string; isDirectory(): boolean }[] = []
-    for (const key of mockFS.keys()) {
-      if (key.startsWith(p + '/')) {
-        const rel = key.slice(p.length + 1)
-        if (rel && !rel.includes('/')) {
-          entries.push({
-            name: rel,
-            isDirectory: () => mockFS.get(key)?.isDirectory ?? false,
-          })
-        }
-      }
-    }
-    return entries.sort((a, b) => a.name.localeCompare(b.name))
-  }),
-
-  // existsSync — true если путь есть в mockFS или является родителем записей
-  existsSync: vi.fn((path: string) => {
-    const p = normalize(path)
-    for (const key of mockFS.keys()) {
-      if (key === p || key.startsWith(p + '/')) return true
-    }
-    return false
-  }),
-
-  // ensureIndex вызывает mkdirSync/writeFileSync — они не тестируются
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-}))
+vi.mock('node:fs', () => mockImpl)
 
 let vectorStore: typeof import('../../src/rag/vectorStore.js')
 let LESSONS_DIR: string

@@ -10,9 +10,9 @@ const __dirname = dirname(__filename)
 
 const COLLECTION_NAME = 'nodomia'
 const WEB_COLLECTION = 'web-docs'
-export const CHROMA_URL = 'http://localhost:8000'
+const CHROMA_URL = 'http://localhost:8000'
 const CHROMA_DATA_DIR = join(__dirname, '..', '..', 'data', 'chroma')
-export const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
+const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
 const CHECKSUM_FILE = join(CHROMA_DATA_DIR, 'checksum.txt')
 const WEB_CHECKSUM_FILE = join(CHROMA_DATA_DIR, 'web-checksum.txt')
 const WEB_SOURCES_DIR = join(__dirname, '..', '..', 'data', 'web-sources')
@@ -132,11 +132,13 @@ export function loadDocuments(): { id: string; content: string; metadata: Record
   return results
 }
 
-// Создаёт или обновляет индекс ChromaDB через HTTP API (localhost:8000).
-// При первом запуске или изменении чексуммы удаляет старую коллекцию,
-// индексирует документы и сохраняет новую чексумму.
-// Пробрасывает: ошибки ChromaDB.
-export async function ensureIndex(): Promise<void> {
+async function ensureCollection(
+  name: string,
+  checksumFile: string,
+  computeFn: () => string,
+  loadData: () => Promise<{ id: string; content: string; metadata: Record<string, string> }[]> | { id: string; content: string; metadata: Record<string, string> }[],
+  setQueryFn: (fn: (text: string, k?: number) => Promise<DocumentResult[]>) => void,
+): Promise<void> {
   mkdirSync(CHROMA_DATA_DIR, { recursive: true })
 
   const client = new ChromaClient({ path: CHROMA_URL })
@@ -145,91 +147,54 @@ export async function ensureIndex(): Promise<void> {
     model: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
   })
 
-  const current = computeChecksum()
+  const current = computeFn()
   let prev = ''
-  try { prev = readFileSync(CHECKSUM_FILE, 'utf-8').trim() } catch { /* not exist */ }
+  try { prev = readFileSync(checksumFile, 'utf-8').trim() } catch { /* not exist */ }
 
-  if (current !== prev) {
-    try { await client.deleteCollection({ name: COLLECTION_NAME }) } catch { /* not exist */ }
+  if (current && current !== prev) {
+    try { await client.deleteCollection({ name }) } catch { /* not exist */ }
 
-    const collection = await client.createCollection({ name: COLLECTION_NAME, embeddingFunction: embedder, metadata: { 'hnsw:space': 'cosine' } })
-    const docs = loadDocuments()
+    const collection = await client.createCollection({ name, embeddingFunction: embedder, metadata: { 'hnsw:space': 'cosine' } })
+    const docs = await loadData()
 
-    if (docs.length === 0) {
-      console.warn('Nodomia RAG: no documents to index, skipping')
-      queryCollection = async () => []
-      return
+    if (docs.length > 0) {
+      const batchSize = 100
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = docs.slice(i, i + batchSize)
+        await collection.add({
+          ids: batch.map(d => d.id),
+          documents: batch.map(d => d.content),
+          metadatas: batch.map(d => d.metadata),
+        })
+      }
+      console.log(`Indexed ${docs.length} documents into ${name}`)
     }
 
-    await collection.add({
-      ids: docs.map(d => d.id),
-      documents: docs.map(d => d.content),
-      metadatas: docs.map(d => d.metadata),
-    })
-
-    writeFileSync(CHECKSUM_FILE, current)
-    console.log(`Indexed ${docs.length} documents into ChromaDB`)
+    writeFileSync(checksumFile, current)
   }
 
-  queryCollection = async (text: string, k = 3) => {
-    const collection = await client.getCollection({ name: COLLECTION_NAME, embeddingFunction: embedder })
+  setQueryFn(async (text: string, k = 3) => {
+    const collection = await client.getCollection({ name, embeddingFunction: embedder })
     const r = await collection.query({ queryTexts: [text], nResults: k })
     return (r.documents?.[0] ?? []).map((content, i) => ({
       pageContent: content,
       metadata: (r.metadatas?.[0]?.[i] ?? {}) as Record<string, string>,
     }))
-  }
+  })
+}
+
+export async function ensureIndex(): Promise<void> {
+  await ensureCollection(COLLECTION_NAME, CHECKSUM_FILE, computeChecksum, loadDocuments, (fn) => { queryCollection = fn })
 }
 
 export async function ensureWebIndex(): Promise<void> {
-  mkdirSync(CHROMA_DATA_DIR, { recursive: true })
-
-  const client = new ChromaClient({ path: CHROMA_URL })
-  const embedder = new OpenRouterEmbeddingFunction({
-    apiKey: process.env.OPENAI_API_KEY!,
-    model: 'nvidia/llama-nemotron-embed-vl-1b-v2:free',
-  })
-
-  const current = computeWebChecksum()
-  let prev = ''
-  try { prev = readFileSync(WEB_CHECKSUM_FILE, 'utf-8').trim() } catch { /* not exist */ }
-
-  if (current && current !== prev) {
-    try { await client.deleteCollection({ name: WEB_COLLECTION }) } catch { /* not exist */ }
-    const collection = await client.createCollection({ name: WEB_COLLECTION, embeddingFunction: embedder, metadata: { 'hnsw:space': 'cosine' } })
-
+  const loadWebData = async () => {
     const { loadWebSources, scrapeUrls } = await import('./webFetcher.js')
     const sources = loadWebSources(WEB_SOURCES_DIR)
-    if (sources.length > 0) {
-      const chunks = await scrapeUrls(sources)
-      if (chunks.length > 0) {
-        const batchSize = 100
-        for (let i = 0; i < chunks.length; i += batchSize) {
-          const batch = chunks.slice(i, i + batchSize)
-          await collection.add({
-            ids: batch.map(c => c.id),
-            documents: batch.map(c => c.content),
-            metadatas: batch.map(c => c.metadata),
-          })
-        }
-        console.log(`Indexed ${chunks.length} web chunks into ${WEB_COLLECTION}`)
-      }
-    }
-
-    writeFileSync(WEB_CHECKSUM_FILE, current)
+    if (sources.length === 0) { return [] }
+    return scrapeUrls(sources)
   }
-
-  webQueryCollection = async (text: string, k = 3) => {
-    const collection = await client.getCollection({ name: WEB_COLLECTION, embeddingFunction: embedder })
-    const r = await collection.query({ queryTexts: [text], nResults: k })
-    return (r.documents?.[0] ?? []).map((content: string | null, i: number) => ({
-      pageContent: content,
-      metadata: {
-        ...(r.metadatas?.[0]?.[i] ?? {}) as Record<string, string>,
-        _collection: 'web',
-      },
-    }))
-  }
+  await ensureCollection(WEB_COLLECTION, WEB_CHECKSUM_FILE, computeWebChecksum, loadWebData, (fn) => { webQueryCollection = fn })
 }
 
 // Возвращает функцию поиска по документам курсов. Должна вызываться после ensureIndex().
@@ -253,3 +218,5 @@ export async function queryAll(text: string): Promise<DocumentResult[]> {
   ])
   return [...webDocs, ...courseDocs]
 }
+
+export { LESSONS_DIR }

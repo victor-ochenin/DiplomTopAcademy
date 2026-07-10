@@ -1,55 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { createMockFS } from '../helpers/test-utils'
 
-// --- loadWebSources (mock node:fs) ---
-const mockFS = new Map<string, { isDirectory: boolean; content?: string }>()
+const { mockFS, addFile, addDir, mockImpl } = createMockFS()
 
-function addFile(path: string, content: string) {
-  mockFS.set(path.replace(/\\/g, '/'), { isDirectory: false, content })
-}
-
-function addDir(path: string) {
-  mockFS.set(path.replace(/\\/g, '/'), { isDirectory: true })
-}
-
-vi.mock('node:fs', () => ({
-  readFileSync: vi.fn((path: string) => {
-    const p = path.replace(/\\/g, '/')
-    const file = mockFS.get(p)
-    if (!file || file.isDirectory) {
-      const err = new Error(`ENOENT: ${p}`) as NodeJS.ErrnoException
-      err.code = 'ENOENT'
-      throw err
-    }
-    return file.content
-  }),
-  readdirSync: vi.fn((path: string, opts?: { withFileTypes?: boolean }) => {
-    const p = path.replace(/\\/g, '/')
-    const names: string[] = []
-    for (const key of mockFS.keys()) {
-      if (key.startsWith(p + '/')) {
-        const rel = key.slice(p.length + 1)
-        if (rel && !rel.includes('/')) names.push(rel)
-      }
-    }
-    names.sort((a, b) => a.localeCompare(b))
-    if (opts?.withFileTypes) {
-      return names.map(name => ({
-        name,
-        isDirectory: () => mockFS.get(p + '/' + name)?.isDirectory ?? false,
-      }))
-    }
-    return names
-  }),
-  existsSync: vi.fn((path: string) => {
-    const p = path.replace(/\\/g, '/')
-    for (const key of mockFS.keys()) {
-      if (key === p || key.startsWith(p + '/')) return true
-    }
-    return false
-  }),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-}))
+vi.mock('node:fs', () => mockImpl)
 
 let webFetcher: typeof import('../../src/rag/webFetcher.js')
 
@@ -67,7 +21,7 @@ async function getMod() {
 describe('chunkPage', () => {
   it('splits content by headings', async () => {
     const mod = await getMod()
-    const page = { url: 'https://example.com', title: 'Test', headings: ['Intro', 'Details'],
+    const page = { url: 'https://example.com', title: 'Test',
       content: '# Intro\n\nHere is the introduction paragraph with enough text to exceed the minimum threshold of twenty characters.\n\n## Details\n\nMore detailed information that also exceeds the minimum twenty character threshold required.' }
     const chunks = mod.chunkPage(page, 'src1')
     expect(chunks).toHaveLength(2)
@@ -80,7 +34,7 @@ describe('chunkPage', () => {
 
   it('filters chunks with body < 20 chars, fallback to single raw chunk', async () => {
     const mod = await getMod()
-    const page = { url: 'https://example.com', title: 'Test', headings: [],
+    const page = { url: 'https://example.com', title: 'Test',
       content: '# Short\nhi\n\n## Also short\nbye\n\n### Another\nshort text only' }
     const chunks = mod.chunkPage(page, 'src1')
     expect(chunks).toHaveLength(1)
@@ -89,7 +43,7 @@ describe('chunkPage', () => {
 
   it('falls back to single chunk when no headings found', async () => {
     const mod = await getMod()
-    const page = { url: 'https://example.com', title: 'Fallback', headings: [],
+    const page = { url: 'https://example.com', title: 'Fallback',
       content: 'plain text without any markdown headings but longer than twenty chars' }
     const chunks = mod.chunkPage(page, 'src1')
     expect(chunks).toHaveLength(1)
@@ -100,7 +54,7 @@ describe('chunkPage', () => {
 
   it('returns empty when page has no content', async () => {
     const mod = await getMod()
-    const page = { url: 'https://example.com', title: 'Empty', headings: [], content: '' }
+    const page = { url: 'https://example.com', title: 'Empty', content: '' }
     const chunks = mod.chunkPage(page, 'src1')
     expect(chunks).toHaveLength(0)
   })
@@ -190,7 +144,6 @@ describe('fetchWebContent', () => {
     const result = await mod.fetchWebContent('https://react.dev')
     expect(result).not.toBeNull()
     expect(result!.title).toBe('React Docs')
-    expect(result!.headings).toEqual(['Getting Started', 'Installation'])
     expect(result!.content).toContain('Getting Started')
     expect(result!.content).toContain('React is a library')
     expect(result!.content).toContain('Installation')

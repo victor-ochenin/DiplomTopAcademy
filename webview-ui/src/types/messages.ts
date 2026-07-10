@@ -1,5 +1,5 @@
-import type { Course, Lesson, Document, Task, Resource } from '../../../src/types';
-export type { Course, Lesson, Document, Task, Resource };
+import type { Course, CourseListItem, Lesson, Document, Task, Resource } from '../../../src/types';
+export type { Course, CourseListItem, Lesson, Document, Task, Resource };
 
 export interface UserProgress {
   completedTasks: Record<string, boolean>
@@ -18,13 +18,15 @@ export interface CheckResult {
 export type WebviewMessage =
   | { type: 'ready' }
   | { type: 'getCourses' }
+  | { type: 'getCourseDetails'; payload: string }
   | { type: 'loadProgress' }
   | { type: 'saveProgress'; payload: UserProgress }
   | { type: 'askQuestion'; payload: { question: string; history: ChatMessage[] } }
   | { type: 'checkCode'; payload: { taskId: string; lessonId: string; filePath: string; kind?: string; expectedFiles?: string[] } }
 
 export type ExtensionMessage =
-  | { type: 'courses'; payload: Course[] }
+  | { type: 'courses'; payload: CourseListItem[] }
+  | { type: 'courseDetails'; payload: Course }
   | { type: 'progress'; payload: UserProgress }
   | { type: 'answer'; payload: string }
   | { type: 'ragError'; payload: string }

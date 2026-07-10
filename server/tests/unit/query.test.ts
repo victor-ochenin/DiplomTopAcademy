@@ -1,55 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { createMockFS, createMockLLM } from '../helpers/test-utils'
 
-const mockFS = new Map<string, { isDirectory: boolean; content?: string }>()
+const { mockFS, addFile, addDir, mockImpl } = createMockFS()
+const { mockRunnable } = createMockLLM()
 
-function addFile(path: string, content: string) {
-  mockFS.set(path.replace(/\\/g, '/'), { isDirectory: false, content })
-}
-
-function addDir(path: string) {
-  mockFS.set(path.replace(/\\/g, '/'), { isDirectory: true })
-}
-
-// мокаем node:fs — factory НЕ ссылается на const из модуля (TDZ), всё внутри
-vi.mock('node:fs', () => ({
-  readFileSync: vi.fn((path: string) => {
-    const p = path.replace(/\\/g, '/')
-    const file = mockFS.get(p)
-    if (!file || file.isDirectory) {
-      const err = new Error(`ENOENT: ${p}`) as NodeJS.ErrnoException
-      err.code = 'ENOENT'
-      throw err
-    }
-    return file.content
-  }),
-  readdirSync: vi.fn((path: string) => {
-    const p = path.replace(/\\/g, '/')
-    const entries: { name: string; isDirectory(): boolean }[] = []
-    for (const key of mockFS.keys()) {
-      if (key.startsWith(p + '/')) {
-        const rel = key.slice(p.length + 1)
-        if (rel && !rel.includes('/')) {
-          entries.push({
-            name: rel,
-            isDirectory: () => mockFS.get(key)?.isDirectory ?? false,
-          })
-        }
-      }
-    }
-    return entries.sort((a, b) => a.name.localeCompare(b.name))
-  }),
-  existsSync: vi.fn((path: string) => {
-    const p = path.replace(/\\/g, '/')
-    for (const key of mockFS.keys()) {
-      if (key === p || key.startsWith(p + '/')) return true
-    }
-    return false
-  }),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-}))
-
-const mockRunnable = { pipe: vi.fn().mockReturnThis(), invoke: vi.fn() }
+vi.mock('node:fs', () => mockImpl)
 
 vi.mock('@langchain/core/prompts', () => ({
   ChatPromptTemplate: { fromMessages: vi.fn().mockReturnValue(mockRunnable) },

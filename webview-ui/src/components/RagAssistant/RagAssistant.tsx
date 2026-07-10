@@ -11,10 +11,13 @@ export default function RagAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { isOpen, togglePanel, closePanel } = useRagState()
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const abandonedRef = useRef(false)
 
   const { postMessage } = useVsCodeApi((msg: ExtensionMessage) => {
+    if (msg.type !== 'answer' && msg.type !== 'ragError') return
     clearTimeout(timerRef.current)
+    if (abandonedRef.current) return    
     if (msg.type === 'answer') {
       setIsLoading(false)
       setMessages(prev => [...prev, { role: 'assistant', text: msg.payload }])
@@ -37,12 +40,14 @@ export default function RagAssistant() {
 
   const handleSend = useCallback((text: string) => {
     clearTimeout(timerRef.current)
+    abandonedRef.current = false
     setIsLoading(true)
     setMessages(prev => [...prev, { role: 'user', text }])
     const history = messages.slice(-5)
     postMessage({ type: 'askQuestion', payload: { question: text, history } })
     timerRef.current = setTimeout(() => {
       timerRef.current = undefined
+      abandonedRef.current = true
       setIsLoading(false)
       setMessages(prev => [...prev, { role: 'assistant', text: 'Сервер не отвечает. Попробуйте позже.' }])
     }, TIMEOUT_MS)

@@ -1,8 +1,16 @@
-export interface Course {
+export interface CourseListItem {
   id: string
   title: string
   description: string
   level: 'beginner' | 'intermediate' | 'advanced'
+  icon?: string
+  lessonCount: number
+  taskCount: number
+  itemsCount: number
+  lessonIds: string[]
+}
+
+export interface Course extends Omit<CourseListItem, 'lessonCount' | 'taskCount' | 'itemsCount' | 'lessonIds'> {
   lessons: Lesson[]
 }
 

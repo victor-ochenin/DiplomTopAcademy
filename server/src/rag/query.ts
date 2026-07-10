@@ -1,14 +1,17 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { ChatOpenAI } from '@langchain/openai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { StringOutputParser } from '@langchain/core/output_parsers'
-import { ensureIndex, ensureWebIndex, queryAll } from './vectorStore.js'
+import { ensureIndex, ensureWebIndex, queryAll, LESSONS_DIR } from './vectorStore.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const LESSONS_DIR = join(__dirname, '..', '..', 'data', 'lessons')
-export { LESSONS_DIR }
+
+const model = new ChatOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  model: 'nvidia/nemotron-3-super-120b-a12b:free',
+  temperature: 0.3,
+  configuration: { baseURL: process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1' },
+})
 
 // Инициализация RAG: запускает индексацию документов курсов и веб-источников в ChromaDB.
 // Вызывается однократно при старте сервера. Если чексумма не изменилась — пропускает переиндексацию.
@@ -23,15 +26,8 @@ export async function initRag(): Promise<void> {
 export async function queryRag(
   question: string,
   history?: { role: string; text: string }[]
-): Promise<{ answer: string; sources: string[] }> {
+): Promise<{ answer: string }> {
   const docs = await queryAll(question)
-
-  const model = new ChatOpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    model: 'nvidia/nemotron-3-super-120b-a12b:free',
-    temperature: 0.3,
-    configuration: { baseURL: 'https://openrouter.ai/api/v1' },
-  })
 
   const historyBlock = history?.length
     ? history.map(m => `${m.role}: ${m.text}`).join('\n') + '\n\n'
@@ -50,7 +46,7 @@ Be brief. Do not use concluding phrases like "Таким образом", "В и
     question,
   })
 
-  return { answer, sources: docs.map(d => d.metadata.title).filter(Boolean) }
+  return { answer }
 }
 
 // Проверяет код пользователя через LLM. Находит задачу по taskId в lesson.json,
@@ -59,7 +55,7 @@ export async function checkCode(
   taskId: string,
   lessonId: string,
   code: string,
-  _kind?: string
+  kind?: string
 ): Promise<{ passed: boolean; feedback: string }> {
   const courses = readdirSync(LESSONS_DIR, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)
   let lessonPath = ''
@@ -72,24 +68,23 @@ export async function checkCode(
   const task = lesson.tasks.find((t: any) => t.id === taskId)
   if (!task) throw new Error(`Task ${taskId} not found`)
 
-  const model = new ChatOpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    model: 'nvidia/nemotron-3-super-120b-a12b:free',
-    temperature: 0.3,
-    configuration: { baseURL: 'https://openrouter.ai/api/v1' },
-  })
-
   const prompt = ChatPromptTemplate.fromMessages([
     ['system', `You are a code reviewer. Check the provided code against the criteria.
 Return JSON: {{ "passed": true/false, "feedback": "explanation in Russian" }}
-Do NOT fix the code. Do NOT write a solution. Just evaluate.${_kind === 'project' ? ' The code contains multiple project files separated by "--- filename ---" markers.' : ''}`],
+Do NOT fix the code. Do NOT write a solution. Just evaluate.${kind === 'project' ? ' The code contains multiple project files separated by "--- filename ---" markers.' : ''}`],
     ['human', `Criteria:\n{criteria}\n\nCode:\n{code}`],
   ])
 
-  const answer = await prompt.pipe(model).pipe(new StringOutputParser()).invoke({
-    criteria: (task.criteria ?? []).join('\n'),
-    code,
-  })
+  let answer: string
+  try {
+    answer = await prompt.pipe(model).pipe(new StringOutputParser()).invoke({
+      criteria: (task.criteria ?? []).join('\n'),
+      code,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`LLM request failed: ${msg}`)
+  }
 
   const cleaned = answer.replace(/```json|```/g, '').trim()
   try {
@@ -99,3 +94,5 @@ Do NOT fix the code. Do NOT write a solution. Just evaluate.${_kind === 'project
     return { passed: false, feedback: 'Не удалось обработать ответ проверки.' }
   }
 }
+
+export { LESSONS_DIR }

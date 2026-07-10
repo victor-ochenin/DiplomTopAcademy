@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { loadCoursesAsync } from '../data/courses';
+import { loadCourseListAsync, loadCourseDetailsAsync } from '../data/courses';
 
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   constructor(
-    private readonly extensionUri: vscode.Uri,
     private readonly context: vscode.ExtensionContext,
   ) {}
 
@@ -15,7 +14,7 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
         // Разрешает выполнение js в WebviewView
         enableScripts: true,
         // Ограничение откуда будут грузиться файлы
-        localResourceRoots: [this.extensionUri],
+        localResourceRoots: [this.context.extensionUri],
       };
 
       // Загрузка html
@@ -58,11 +57,22 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       // Запрос списка курсов для инициализации UI
       case 'getCourses': {
         try {
-          const courses = await loadCoursesAsync();
+          const courses = await loadCourseListAsync();
           webviewView.webview.postMessage({ type: 'courses', payload: courses });
         } catch (err) {
           console.error('Nodomia: failed to load courses', err);
           webviewView.webview.postMessage({ type: 'courses', payload: [] });
+        }
+        break;
+      }
+
+      case 'getCourseDetails': {
+        try {
+          const course = await loadCourseDetailsAsync(message.payload);
+          webviewView.webview.postMessage({ type: 'courseDetails', payload: course });
+        } catch (err) {
+          console.error('Nodomia: failed to load course details', err);
+          webviewView.webview.postMessage({ type: 'courseDetails', payload: null });
         }
         break;
       }
@@ -141,15 +151,15 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
 
   private async getHtmlContent(webview: vscode.Webview): Promise<string> {
     try {
-      const htmlPath = path.join(this.extensionUri.fsPath, 'webview-ui', 'index.html');
+      const htmlPath = path.join(this.context.extensionUri.fsPath, 'webview-ui', 'index.html');
       const html = await fs.promises.readFile(htmlPath, 'utf-8');
       
       // asWebviewUri Преобразует локальный `file://` URI в специальный URI, который VS Code может загружать внутри WebView.
       const mainJsUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.js')
+        vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'main.js')
       );
       const mainCssUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
+        vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'main.css')
       );
       
       // Подставляем плейсхолдеры

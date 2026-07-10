@@ -11,20 +11,19 @@ const FETCH_OPTIONS = {
   signal: AbortSignal.timeout(10000),
 }
 
-export interface WebPage {
+interface WebPage {
   url: string
   title: string
   content: string
-  headings: string[]
 }
 
-export interface Chunk {
+interface Chunk {
   id: string
   content: string
   metadata: Record<string, string>
 }
 
-export interface WebSource {
+interface WebSource {
   id: string
   url: string
   depth: number
@@ -67,11 +66,6 @@ export async function fetchWebContent(url: string): Promise<WebPage | null> {
     $('script, style, nav, footer, aside, iframe, svg, noscript, [role="navigation"], [role="banner"]').remove()
 
     const title = $('title').first().text().trim() || url
-    const headings: string[] = []
-    $('h1, h2, h3').each((_, el) => {
-      const text = $(el).text().trim()
-      if (text) headings.push(text)
-    })
 
     let content = ''
     const main = $('main, article, [role="main"], .documentation, .content, #content, .markdown').first()
@@ -88,7 +82,7 @@ export async function fetchWebContent(url: string): Promise<WebPage | null> {
       .replace(/<[^>]+>/g, '')
     content = content.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
 
-    return { url, title, content, headings }
+    return { url, title, content }
   } catch {
     return null
   }
