@@ -44,13 +44,13 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'loadProgress': {
-        const saved = this.context.workspaceState.get('nodomia.progress') ?? { completedTasks: {} };
+        const saved = await this.getProgress();
         webviewView.webview.postMessage({ type: 'progress', payload: saved });
         break;
       }
 
       case 'saveProgress': {
-        await this.context.workspaceState.update('nodomia.progress', message.payload);
+        await this.context.globalState.update('nodomia.progress', message.payload);
         break;
       }
       
@@ -147,6 +147,20 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
       default:
         console.warn(`Nodomia: unknown message type: ${(message as any)?.type}`);
     }
+  }
+
+  private async getProgress(): Promise<{ completedTasks: Record<string, boolean> }> {
+    const empty = { completedTasks: {} };
+    const global = this.context.globalState.get<{ completedTasks: Record<string, boolean> }>('nodomia.progress');
+    if (global) { return global; }
+
+    const legacy = this.context.workspaceState.get<{ completedTasks: Record<string, boolean> }>('nodomia.progress');
+    if (legacy && legacy.completedTasks && Object.keys(legacy.completedTasks).length > 0) {
+      await this.context.globalState.update('nodomia.progress', legacy);
+      await this.context.workspaceState.update('nodomia.progress', undefined);
+      return legacy;
+    }
+    return empty;
   }
 
   private async getHtmlContent(webview: vscode.Webview): Promise<string> {

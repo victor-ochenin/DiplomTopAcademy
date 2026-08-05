@@ -9,6 +9,8 @@ const DEFAULT_STATE: RagState = {
   isOpen: false,
 };
 
+// Хук состояния панели ассистента: хранит isOpen в useState и синхронизирует
+// с VS Code через getState/setState, чтобы открытость панели переживала перезагрузку webview.
 export function useRagState() {
   const { getState, setState } = useVsCodeApi();
   const [isOpen, setIsOpen] = useState(false);

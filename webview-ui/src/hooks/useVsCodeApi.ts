@@ -11,6 +11,7 @@ declare function acquireVsCodeApi(): VsCodeApi;
 
 let api: VsCodeApi | undefined;
 
+// Возвращает единственный экземпляр VsCodeApi. acquireVsCodeApi вызывается только один раз (ленивый singleton).
 function getVsCodeApi(): VsCodeApi {
   if (!api) {
     api = acquireVsCodeApi();
@@ -18,6 +19,8 @@ function getVsCodeApi(): VsCodeApi {
   return api;
 }
 
+// Хук-обёртка над VsCodeApi webview: даёт postMessage/getState/setState и
+// подписывает onMessage на сообщения, приходящие из extension host.
 export function useVsCodeApi(onMessage?: (message: ExtensionMessage) => void) {
   const vscode = getVsCodeApi();
 

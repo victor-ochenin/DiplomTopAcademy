@@ -4,6 +4,7 @@ import type { Course, Lesson, Task, Resource, CourseListItem } from '../../types
 
 let basePath = '';
 
+// Задаёт корневой путь, от которого читаются файлы курсов. Вызывается при активации расширения.
 export function initCourses(base: string) {
   if (!base || typeof base !== 'string') {
     console.error('Nodomia: initCourses requires a valid base path');
@@ -15,14 +16,17 @@ export function initCourses(base: string) {
 let listCache: CourseListItem[] | null = null;
 let detailsCache = new Map<string, Course>();
 
+// Type guard: проверяет, что значение — непустая строка.
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
 }
 
+// Type guard: проверяет, что уровень сложности валидный.
 function isValidLevel(v: unknown): v is 'beginner' | 'intermediate' | 'advanced' {
   return v === 'beginner' || v === 'intermediate' || v === 'advanced';
 }
 
+// Безопасный JSON.parse: при ошибке логирует и возвращает null вместо исключения.
 function parseJsonSafe(raw: string, label: string): unknown {
   try {
     return JSON.parse(raw);
@@ -32,6 +36,7 @@ function parseJsonSafe(raw: string, label: string): unknown {
   }
 }
 
+// Асинхронно читает файл. Различает ошибку «файл не найден» (warn) и прочие (error). Возвращает null при неудаче.
 async function loadFileAsync(filePath: string): Promise<string | null> {
   try {
     return await fs.promises.readFile(filePath, 'utf-8');
@@ -45,6 +50,7 @@ async function loadFileAsync(filePath: string): Promise<string | null> {
   }
 }
 
+// Читает lesson.json по рефу и возвращает объект Lesson (включая содержимое .md документов).
 async function parseLessonAsync(ref: string): Promise<Lesson | null> {
   if (!isNonEmptyString(ref)) {
     console.warn('Nodomia: parseLessonAsync received empty ref');
@@ -94,6 +100,7 @@ async function parseLessonAsync(ref: string): Promise<Lesson | null> {
   };
 }
 
+// Читает course.json по пути и возвращает объект Course, рекурсивно разбирая уроки.
 async function parseCourseAsync(filePath: string): Promise<Course | null> {
   const raw = await loadFileAsync(filePath);
   if (!raw) { return null; }
@@ -131,6 +138,7 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
   };
 }
 
+// Лёгкое чтение lesson.json без загрузки .md: возвращает только id и счётчики документов/задач.
 async function readLessonMetaAsync(ref: string): Promise<{ id: string; docCount: number; taskCount: number }> {
   const raw = await loadFileAsync(path.join(basePath, ref));
   if (!raw) { return { id: '', docCount: 0, taskCount: 0 }; }
@@ -144,6 +152,7 @@ async function readLessonMetaAsync(ref: string): Promise<{ id: string; docCount:
   };
 }
 
+// Возвращает абсолютные пути ко всем course.json в директории src/data/courses.
 async function getJsonFiles(): Promise<string[]> {
   const coursesDir = path.join(basePath, 'src', 'data', 'courses');
   let files: string[];
@@ -156,6 +165,7 @@ async function getJsonFiles(): Promise<string[]> {
   return files.filter(f => f.endsWith('.json') && f.length > 5).map(f => path.join(coursesDir, f));
 }
 
+// Публичный API: возвращает список курсов с метаданными (без контента уроков). Кэшируется.
 export async function loadCourseListAsync(): Promise<CourseListItem[]> {
   if (listCache) { return listCache; }
   if (!basePath) {
@@ -211,6 +221,7 @@ export async function loadCourseListAsync(): Promise<CourseListItem[]> {
   return items;
 }
 
+// Публичный API: возвращает полный курс по id (с уроками и контентом). Кэшируется.
 export async function loadCourseDetailsAsync(id: string): Promise<Course | null> {
   if (detailsCache.has(id)) { return detailsCache.get(id) ?? null; }
   if (!basePath) {
