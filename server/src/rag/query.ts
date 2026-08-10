@@ -22,7 +22,7 @@ export async function initRag(): Promise<void> {
 
 // RAG-запрос: ищет релевантные документы по вопросу, формирует контекст и отправляет в LLM.
 // history — опциональная переписка для поддержания контекста диалога.
-// Возвращает ответ и список источников (id документов).
+// Возвращает ответ на основе найденных документов.
 export async function queryRag(
   question: string,
   history?: { role: string; text: string }[]

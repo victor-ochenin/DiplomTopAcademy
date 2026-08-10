@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/course.schema.json",
   "id": "react-19-patterns",
   "title": "React 19 и паттерны",
   "description": "Освойте возможности React 19: Actions, серверные компоненты, серверные функции и продвинутые паттерны композиции.",

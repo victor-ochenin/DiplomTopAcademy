@@ -1,5 +1,6 @@
 {
-  "id": "jsx-syntax",
+  "$schema": "../../../schemas/lesson.schema.json",
+  "id": "jsx",
   "title": "JSX синтаксис",
   "documents": [
     {

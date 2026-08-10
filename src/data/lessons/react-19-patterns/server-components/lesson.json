@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../schemas/lesson.schema.json",
   "id": "server-components",
   "title": "Серверные компоненты",
   "documents": [

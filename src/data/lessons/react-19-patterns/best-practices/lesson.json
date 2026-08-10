@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../schemas/lesson.schema.json",
   "id": "best-practices",
   "title": "Лучшие практики",
   "documents": [

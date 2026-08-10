@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../schemas/lesson.schema.json",
   "id": "react-compiler",
   "title": "React Compiler",
   "documents": [

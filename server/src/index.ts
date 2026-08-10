@@ -1,10 +1,14 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
 import 'dotenv/config'
 import { initRag, queryRag, checkCode } from './rag/query.js'
 
 const app = new Hono()
+
+// Логирует каждый входящий запрос: метод, путь, статус, время ответа
+app.use('*', logger())
 
 app.use('/api/*', cors())
 

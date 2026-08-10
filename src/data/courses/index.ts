@@ -42,7 +42,7 @@ async function loadFileAsync(filePath: string): Promise<string | null> {
     return await fs.promises.readFile(filePath, 'utf-8');
   } catch (err: any) {
     if (err?.code === 'ENOENT') {
-      console.warn(`Nodomia: file not found: ${filePath}`);
+      console.error(`Nodomia: file not found: ${filePath}`);
     } else {
       console.error(`Nodomia: failed to read ${filePath}`, err);
     }
@@ -53,7 +53,7 @@ async function loadFileAsync(filePath: string): Promise<string | null> {
 // Читает lesson.json по рефу и возвращает объект Lesson (включая содержимое .md документов).
 async function parseLessonAsync(ref: string): Promise<Lesson | null> {
   if (!isNonEmptyString(ref)) {
-    console.warn('Nodomia: parseLessonAsync received empty ref');
+    console.error('Nodomia: parseLessonAsync received empty ref');
     return null;
   }
 
@@ -68,7 +68,7 @@ async function parseLessonAsync(ref: string): Promise<Lesson | null> {
   const title = data.title;
 
   if (!isNonEmptyString(id) || !isNonEmptyString(title)) {
-    console.warn(`Nodomia: lesson ${ref} missing required fields (id, title)`);
+    console.error(`Nodomia: lesson ${ref} missing required fields (id, title)`);
     return null;
   }
 
@@ -116,7 +116,7 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
   const icon = isNonEmptyString(data.icon) ? data.icon : undefined;
 
   if (!isNonEmptyString(id) || !isNonEmptyString(title)) {
-    console.warn(`Nodomia: course ${filePath} missing required fields (id, title)`);
+    console.error(`Nodomia: course ${filePath} missing required fields (id, title)`);
     return null;
   }
 

@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../schemas/lesson.schema.json",
   "id": "rsc-fundamentals",
   "title": "Основы RSC",
   "documents": [

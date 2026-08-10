@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../schemas/lesson.schema.json",
   "id": "actions-form-handling",
   "title": "Actions и работа с формами",
   "documents": [

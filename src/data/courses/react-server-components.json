@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/course.schema.json",
   "id": "react-server-components",
   "title": "React Server Components",
   "description": "Продвинутый курс по серверным компонентам, асинхронной загрузке данных, Server Actions, Streaming и React Compiler.",
