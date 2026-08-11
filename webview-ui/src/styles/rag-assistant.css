@@ -105,7 +105,14 @@
   height: 14px;
 }
 
-.rag-sidepanel .rsp-header .rsp-close {
+.rag-sidepanel .rsp-header .rsp-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rag-sidepanel .rsp-header .rsp-close,
+.rag-sidepanel .rsp-header .rsp-reset {
   width: 22px;
   height: 22px;
   border-radius: 4px;
@@ -120,13 +127,46 @@
   transition: background 0.15s, transform 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.rag-sidepanel .rsp-header .rsp-close:hover {
+.rag-sidepanel .rsp-header .rsp-close:hover,
+.rag-sidepanel .rsp-header .rsp-reset:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
 }
 
-.rag-sidepanel .rsp-header .rsp-close:active {
+.rag-sidepanel .rsp-header .rsp-close:active,
+.rag-sidepanel .rsp-header .rsp-reset:active {
   transform: scale(0.96);
+}
+
+.rag-sidepanel .rsp-header .rsp-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.rag-sidepanel .rsp-header .rsp-confirm-label {
+  white-space: nowrap;
+}
+
+.rag-sidepanel .rsp-header .rsp-confirm-yes,
+.rag-sidepanel .rsp-header .rsp-confirm-no {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.rag-sidepanel .rsp-header .rsp-confirm-yes:hover,
+.rag-sidepanel .rsp-header .rsp-confirm-no:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 .rag-sidepanel .rsp-body {

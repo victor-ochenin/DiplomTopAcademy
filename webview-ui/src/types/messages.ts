@@ -21,13 +21,13 @@ export type WebviewMessage =
   | { type: 'getCourseDetails'; payload: string }
   | { type: 'loadProgress' }
   | { type: 'saveProgress'; payload: UserProgress }
-  | { type: 'askQuestion'; payload: { question: string; history: ChatMessage[] } }
+  | { type: 'askQuestion'; payload: { question: string; history: ChatMessage[]; requestId: number } }
   | { type: 'checkCode'; payload: { taskId: string; lessonId: string; filePath: string; kind?: string; expectedFiles?: string[] } }
 
 export type ExtensionMessage =
   | { type: 'courses'; payload: CourseListItem[] }
   | { type: 'courseDetails'; payload: Course }
   | { type: 'progress'; payload: UserProgress }
-  | { type: 'answer'; payload: string }
-  | { type: 'ragError'; payload: string }
+  | { type: 'answer'; requestId: number; payload: string }
+  | { type: 'ragError'; requestId: number; payload: string }
   | { type: 'checkResult'; payload: CheckResult }

@@ -183,6 +183,13 @@ async function ensureCollection(
   })
 }
 
+// Проверка реальной связи с ChromaDB: heartbeat — фактический HTTP-запрос к серверу.
+// Нужен потому, что при неизменной чексумме ensureIndex() не контактирует с ChromaDB вовсе.
+export async function testChromaConnection(): Promise<void> {
+  const client = new ChromaClient({ path: CHROMA_URL })
+  await client.heartbeat()
+}
+
 export async function ensureIndex(): Promise<void> {
   await ensureCollection(COLLECTION_NAME, CHECKSUM_FILE, computeChecksum, loadDocuments, (fn) => { queryCollection = fn })
 }

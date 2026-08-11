@@ -82,14 +82,15 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
           const res = await fetch('http://localhost:3001/api/query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question: message.payload.question, history: message.payload.history }),
+            body: JSON.stringify({ question: message.payload.question, history: message.payload.history, requestId: message.payload.requestId }),
           });
           if (!res.ok) { throw new Error(`Server error: ${res.status}`); }
           const data = await res.json() as { answer: string };
-          webviewView.webview.postMessage({ type: 'answer', payload: data.answer });
+          webviewView.webview.postMessage({ type: 'answer', requestId: message.payload.requestId, payload: data.answer });
         } catch (err) {
           webviewView.webview.postMessage({
             type: 'ragError',
+            requestId: message.payload.requestId,
             payload: err instanceof Error ? err.message : 'Unknown error',
           });
         }

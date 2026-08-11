@@ -5,26 +5,26 @@ import type { ExtensionMessage, ChatMessage } from '../../types/messages'
 import '../../styles/rag-assistant.css'
 import RagSidePanel from './RagSidePanel'
 
-const TIMEOUT_MS = 30_000
+const TIMEOUT_MS = 45_000
 
 export default function RagAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { isOpen, togglePanel, closePanel } = useRagState()
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const abandonedRef = useRef(false)
+  const requestSeqRef = useRef(0)
+  const activeRequestIdRef = useRef(0)
 
   const { postMessage } = useVsCodeApi((msg: ExtensionMessage) => {
     if (msg.type !== 'answer' && msg.type !== 'ragError') return
+    if (msg.requestId !== activeRequestIdRef.current) return
     clearTimeout(timerRef.current)
-    if (abandonedRef.current) return    
-    if (msg.type === 'answer') {
-      setIsLoading(false)
-      setMessages(prev => [...prev, { role: 'assistant', text: msg.payload }])
-    } else if (msg.type === 'ragError') {
-      setIsLoading(false)
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Сервер не отвечает. Попробуйте позже.' }])
-    }
+    activeRequestIdRef.current = 0
+    setIsLoading(false)
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      text: msg.type === 'ragError' ? 'Сервер не отвечает. Попробуйте позже.' : msg.payload,
+    }])
   })
 
   useEffect(() => {
@@ -38,16 +38,24 @@ export default function RagAssistant() {
     }
   }, [isOpen])
 
+  const handleReset = useCallback(() => {
+    clearTimeout(timerRef.current)
+    activeRequestIdRef.current = 0
+    setIsLoading(false)
+    setMessages([])
+  }, [])
+
   const handleSend = useCallback((text: string) => {
     clearTimeout(timerRef.current)
-    abandonedRef.current = false
+    const requestId = ++requestSeqRef.current
+    activeRequestIdRef.current = requestId
     setIsLoading(true)
     setMessages(prev => [...prev, { role: 'user', text }])
     const history = messages.slice(-5)
-    postMessage({ type: 'askQuestion', payload: { question: text, history } })
+    postMessage({ type: 'askQuestion', payload: { question: text, history, requestId } })
     timerRef.current = setTimeout(() => {
       timerRef.current = undefined
-      abandonedRef.current = true
+      activeRequestIdRef.current = 0
       setIsLoading(false)
       setMessages(prev => [...prev, { role: 'assistant', text: 'Сервер не отвечает. Попробуйте позже.' }])
     }, TIMEOUT_MS)
@@ -65,6 +73,7 @@ export default function RagAssistant() {
         isOpen={isOpen}
         onClose={closePanel}
         onSend={handleSend}
+        onReset={handleReset}
         messages={messages}
         isLoading={isLoading}
       />

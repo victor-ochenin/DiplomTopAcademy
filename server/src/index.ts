@@ -14,7 +14,7 @@ app.use('/api/*', cors())
 
 let ready = false
 initRag()
-  .then(() => { ready = true; console.log('RAG ready') })
+  .then(() => { ready = true; console.log('RAG initialized') })
   .catch(err => { console.error('RAG init failed:', err) })
 
 // Запрос к RAG: вопрос от пользователя → ответ по материалам курса

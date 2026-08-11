@@ -8,6 +8,7 @@ interface RagSidePanelProps {
   isOpen: boolean
   onClose: () => void
   onSend: (text: string) => void
+  onReset: () => void
   messages: ChatMessage[]
   isLoading: boolean
 }
@@ -19,11 +20,17 @@ export default function RagSidePanel({
   isOpen,
   onClose,
   onSend,
+  onReset,
   messages,
   isLoading,
 }: RagSidePanelProps) {
   const [panelWidth, setPanelWidth] = useState(MIN_WIDTH)
   const [isResizing, setIsResizing] = useState(false)
+  const [confirmReset, setConfirmReset] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) setConfirmReset(false)
+  }, [isOpen])
 
   // Реф на textarea для управления высотой и получения текста при отправке
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -103,7 +110,23 @@ export default function RagSidePanel({
         <div className="rsp-title">
           Ассистент
         </div>
-        <button className="rsp-close" onClick={onClose}>×</button>
+        <div className="rsp-actions">
+          {confirmReset ? (
+            <div className="rsp-confirm">
+              <span className="rsp-confirm-label">Очистить диалог?</span>
+              <button className="rsp-confirm-yes" onClick={() => { onReset(); setConfirmReset(false) }}>Да</button>
+              <button className="rsp-confirm-no" onClick={() => setConfirmReset(false)}>Нет</button>
+            </div>
+          ) : (
+            <button className="rsp-reset" onClick={() => setConfirmReset(true)} title="Начать новый диалог">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 2.5V6h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3.8 4.6a5.5 5.5 0 1 1-0.9 4.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+          <button className="rsp-close" onClick={onClose}>×</button>
+        </div>
       </div>
 
       <div className="rsp-body">

@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import { ChatOpenAI } from '@langchain/openai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { StringOutputParser } from '@langchain/core/output_parsers'
-import { ensureIndex, ensureWebIndex, queryAll, LESSONS_DIR } from './vectorStore.js'
+import { ensureIndex, ensureWebIndex, testChromaConnection, queryAll, LESSONS_DIR } from './vectorStore.js'
+import { OpenRouterEmbeddingFunction } from './embeddings.js'
 
 
 const model = new ChatOpenAI({
@@ -13,9 +14,20 @@ const model = new ChatOpenAI({
   configuration: { baseURL: process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1' },
 })
 
-// Инициализация RAG: запускает индексацию документов курсов и веб-источников в ChromaDB.
+// Проверка связи с OpenRouter: реальный эмбеддинг-запрос маленькой строки
+// и обычный запрос к chat-эндпоинту (тому же, что использует ассистент для ответов).
+export async function testOpenRouterConnection(): Promise<void> {
+  const embedder = new OpenRouterEmbeddingFunction({ apiKey: process.env.OPENAI_API_KEY })
+  await embedder.generate(['test'])
+  await model.invoke('Скажи только слово "ок"')
+}
+
+// Инициализация RAG: проверяет связь с ChromaDB и OpenRouter, затем запускает
+// индексацию документов курсов и веб-источников в ChromaDB.
 // Вызывается однократно при старте сервера. Если чексумма не изменилась — пропускает переиндексацию.
 export async function initRag(): Promise<void> {
+  await testChromaConnection()
+  await testOpenRouterConnection()
   await ensureIndex()
   await ensureWebIndex()
 }
