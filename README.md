@@ -30,7 +30,8 @@ WebView (React SPA)  ←→  Extension Host  ←→  RAG Server
 | `types.ts`                          | Типы курсов: Course, CourseListItem, Lesson, Task (choice / open / coding), Document, Resource — производные от `data/schemas.ts` через `z.infer`. |
 | `protocol.ts`                       | Типы и zod-валидация сообщений WebView ↔ extension (WebviewMessage, ExtensionMessage).                                                 |
 | `webview/nodomiaWebviewProvider.ts` | WebviewViewProvider — получает сообщения от WebView (валидирует через `protocol.ts`), перенаправляет запросы к данным курсов или к RAG-серверу. |
-| `data/courses/index.ts`             | Загрузчик курсов.`loadCourseListAsync` — список (метаданные без уроков), `loadCourseDetailsAsync` — полный курс с уроками по id. |
+| `data/courses/courseLoader.ts`      | Загрузчик курсов.`loadCourseListAsync` — список (метаданные без уроков), `loadCourseDetailsAsync` — полный курс с уроками по id. |
+| `data/courses/index.ts`             | Barrel: реэкспортирует публичный API загрузчика из `courseLoader.ts`.                                                             |
 
 ### WebView (`webview-ui/`)
 
