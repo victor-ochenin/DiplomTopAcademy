@@ -63,11 +63,25 @@ describe('checkCode', () => {
     expect(result).toEqual({ passed: false, feedback: 'Не удалось обработать ответ проверки.' })
   })
 
-  it('returns fallback when JSON fields are missing', async () => {
+  it('returns fallback when JSON fields are missing or wrong-typed', async () => {
     setupLesson('what-is-react')
     mockRunnable.invoke.mockResolvedValue('{}')
     const result = await mod.checkCode('task1', 'what-is-react', 'code')
-    expect(result).toEqual({ passed: false, feedback: '' })
+    expect(result).toEqual({ passed: false, feedback: 'Не удалось обработать ответ проверки.' })
+  })
+
+  it('returns fallback when passed is a string instead of boolean', async () => {
+    setupLesson('what-is-react')
+    mockRunnable.invoke.mockResolvedValue('{"passed":"false","feedback":"x"}')
+    const result = await mod.checkCode('task1', 'what-is-react', 'code')
+    expect(result).toEqual({ passed: false, feedback: 'Не удалось обработать ответ проверки.' })
+  })
+
+  it('returns parsed result when JSON is valid', async () => {
+    setupLesson('what-is-react')
+    mockRunnable.invoke.mockResolvedValue('{"passed":true,"feedback":"ok"}')
+    const result = await mod.checkCode('task1', 'what-is-react', 'code')
+    expect(result).toEqual({ passed: true, feedback: 'ok' })
   })
 
   it('throws when lesson is not found', async () => {

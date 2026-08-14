@@ -44,8 +44,8 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "validate:data": "node scripts/validate-data.mjs",
-    "new:lesson": "node scripts/new-lesson.mjs",
+    "validate:data": "tsx src/data/validate-data.ts",
+    "new:lesson": "node src/data/new-lesson.mjs",
     "test": "vscode-test"
   },
   "devDependencies": {
@@ -58,6 +58,7 @@
     "esbuild": "^0.27.3",
     "eslint": "^9.39.3",
     "npm-run-all": "^4.1.5",
+    "tsx": "^4.19.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"
   },
@@ -66,6 +67,7 @@
     "react-dom": "^19.2.6",
     "react-markdown": "^10.1.0",
     "rehype-highlight": "^7.0.2",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "zod": "^3.25"
   }
 }

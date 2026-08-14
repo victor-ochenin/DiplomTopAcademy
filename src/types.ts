@@ -1,3 +1,19 @@
+import type { z } from 'zod';
+import { LessonFileSchema, ResourceSchema, TaskSchema } from './data/schemas';
+
+export type Task = z.infer<typeof TaskSchema>
+export type Resource = z.infer<typeof ResourceSchema>
+
+export interface Document {
+  id: string
+  title: string
+  content: string
+}
+
+export type Lesson = Omit<z.infer<typeof LessonFileSchema>, 'documents'> & {
+  documents: Document[]
+}
+
 export interface CourseListItem {
   id: string
   title: string
@@ -12,48 +28,4 @@ export interface CourseListItem {
 
 export interface Course extends Omit<CourseListItem, 'lessonCount' | 'taskCount' | 'itemsCount' | 'lessonIds'> {
   lessons: Lesson[]
-}
-
-export interface Document {
-  id: string
-  title: string
-  content: string
-}
-
-export interface Lesson {
-  id: string
-  title: string
-  documents: Document[]
-  tasks: Task[]
-  resources: Resource[]
-}
-
-export type Task = 
-  | {
-      id: string
-      type: 'choice'
-      question: string
-      options: string[]
-      correctAnswer: string
-    }
-  | {
-      id: string
-      type: 'open'
-      question: string
-      acceptableAnswers: string[]
-    }
-  | {
-      id: string
-      type: 'coding'
-      kind: 'file' | 'project'
-      question: string
-      instructions: string
-      criteria: string[]
-      starterCode?: string
-      expectedFiles: string[]
-    }
-
-export interface Resource {
-  title: string
-  url: string
 }

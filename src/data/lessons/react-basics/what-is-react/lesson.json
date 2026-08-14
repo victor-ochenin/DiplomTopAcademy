@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "what-is-react",
   "title": "Что такое React?",
   "documents": [

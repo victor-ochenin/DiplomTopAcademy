@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "streaming-suspense",
   "title": "Streaming и Suspense",
   "documents": [

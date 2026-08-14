@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "server-actions",
   "title": "Server Actions",
   "documents": [

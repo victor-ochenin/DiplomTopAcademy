@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "new-react-19-hooks",
   "title": "Новые хуки React 19",
   "documents": [

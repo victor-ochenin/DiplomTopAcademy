@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "component-basics",
   "title": "Component Basics",
   "documents": [

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Course, Lesson, Task, Resource, CourseListItem } from '../../types';
+import type { Course, Lesson, CourseListItem } from '../../types';
+import { CourseSchema, LessonFileSchema } from '../schemas';
 
 let basePath = '';
 
@@ -15,16 +16,6 @@ export function initCourses(base: string) {
 
 let listCache: CourseListItem[] | null = null;
 let detailsCache = new Map<string, Course>();
-
-// Type guard: проверяет, что значение — непустая строка.
-function isNonEmptyString(v: unknown): v is string {
-  return typeof v === 'string' && v.length > 0;
-}
-
-// Type guard: проверяет, что уровень сложности валидный.
-function isValidLevel(v: unknown): v is 'beginner' | 'intermediate' | 'advanced' {
-  return v === 'beginner' || v === 'intermediate' || v === 'advanced';
-}
 
 // Безопасный JSON.parse: при ошибке логирует и возвращает null вместо исключения.
 function parseJsonSafe(raw: string, label: string): unknown {
@@ -52,52 +43,26 @@ async function loadFileAsync(filePath: string): Promise<string | null> {
 
 // Читает lesson.json по рефу и возвращает объект Lesson (включая содержимое .md документов).
 async function parseLessonAsync(ref: string): Promise<Lesson | null> {
-  if (!isNonEmptyString(ref)) {
-    console.error('Nodomia: parseLessonAsync received empty ref');
+  const raw = await loadFileAsync(path.join(basePath, ref));
+  if (!raw) { return null; }
+
+  const lesson = LessonFileSchema.safeParse(parseJsonSafe(raw, `lesson ${ref}`));
+  if (!lesson.success) {
+    console.error(`Nodomia: invalid lesson ${ref}:`, lesson.error.issues);
     return null;
   }
 
-  const lessonRaw = await loadFileAsync(path.join(basePath, ref));
-  if (!lessonRaw) { return null; }
-
-  const lessonData = parseJsonSafe(lessonRaw, `lesson ${ref}`);
-  if (!lessonData || typeof lessonData !== 'object') { return null; }
-
-  const data = lessonData as Record<string, unknown>;
-  const id = data.id;
-  const title = data.title;
-
-  if (!isNonEmptyString(id) || !isNonEmptyString(title)) {
-    console.error(`Nodomia: lesson ${ref} missing required fields (id, title)`);
-    return null;
-  }
-
-  const docArray = Array.isArray(data.documents) ? data.documents : [];
   const docs = await Promise.all(
-    docArray.map(async (doc: unknown) => {
-      if (!doc || typeof doc !== 'object') {
-        return { id: '', title: '', content: '' };
-      }
-      const d = doc as Record<string, unknown>;
-      const contentFile = isNonEmptyString(d.contentFile) ? d.contentFile : '';
-      const content = contentFile
-        ? (await loadFileAsync(path.join(basePath, contentFile))) ?? ''
-        : '';
-      return {
-        id: isNonEmptyString(d.id) ? d.id : '',
-        title: isNonEmptyString(d.title) ? d.title : '',
-        content,
-      };
-    })
+    lesson.data.documents.map(async (doc) => ({
+      id: doc.id,
+      title: doc.title,
+      content: doc.contentFile
+        ? (await loadFileAsync(path.join(basePath, doc.contentFile))) ?? ''
+        : '',
+    }))
   );
 
-  return {
-    id,
-    title,
-    documents: docs.filter(d => d.id),
-    tasks: Array.isArray(data.tasks) ? data.tasks as Task[] : [],
-    resources: Array.isArray(data.resources) ? data.resources as Resource[] : [],
-  };
+  return { ...lesson.data, documents: docs };
 }
 
 // Читает course.json по пути и возвращает объект Course, рекурсивно разбирая уроки.
@@ -105,35 +70,22 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
   const raw = await loadFileAsync(filePath);
   if (!raw) { return null; }
 
-  const courseData = parseJsonSafe(raw, `course ${filePath}`);
-  if (!courseData || typeof courseData !== 'object') { return null; }
-
-  const data = courseData as Record<string, unknown>;
-  const id = data.id;
-  const title = data.title;
-  const description = data.description;
-  const level = isValidLevel(data.level) ? data.level : 'beginner';
-  const icon = isNonEmptyString(data.icon) ? data.icon : undefined;
-
-  if (!isNonEmptyString(id) || !isNonEmptyString(title)) {
-    console.error(`Nodomia: course ${filePath} missing required fields (id, title)`);
+  const course = CourseSchema.safeParse(parseJsonSafe(raw, `course ${filePath}`));
+  if (!course.success) {
+    console.error(`Nodomia: invalid course ${filePath}:`, course.error.issues);
     return null;
   }
 
-  const lessonRefs = Array.isArray(data.lessons) ? data.lessons : [];
-
   const lessons = (await Promise.all(
-    lessonRefs.map((ref: unknown) =>
-      isNonEmptyString(ref) ? parseLessonAsync(ref) : Promise.resolve(null)
-    )
+    course.data.lessons.map((ref) => parseLessonAsync(ref))
   )).filter((l: Lesson | null): l is Lesson => l !== null);
 
   return {
-    id,
-    title,
-    description: isNonEmptyString(description) ? description : '',
-    level,
-    icon,
+    id: course.data.id,
+    title: course.data.title,
+    description: course.data.description,
+    level: course.data.level,
+    icon: course.data.icon,
     lessons,
   };
 }
@@ -142,13 +94,12 @@ async function parseCourseAsync(filePath: string): Promise<Course | null> {
 async function readLessonMetaAsync(ref: string): Promise<{ id: string; docCount: number; taskCount: number }> {
   const raw = await loadFileAsync(path.join(basePath, ref));
   if (!raw) { return { id: '', docCount: 0, taskCount: 0 }; }
-  const data = parseJsonSafe(raw, `lesson meta ${ref}`);
-  if (!data || typeof data !== 'object') { return { id: '', docCount: 0, taskCount: 0 }; }
-  const d = data as Record<string, unknown>;
+  const lesson = LessonFileSchema.safeParse(parseJsonSafe(raw, `lesson meta ${ref}`));
+  if (!lesson.success) { return { id: '', docCount: 0, taskCount: 0 }; }
   return {
-    id: isNonEmptyString(d.id) ? d.id : '',
-    docCount: Array.isArray(d.documents) ? (d.documents as any[]).length : 0,
-    taskCount: Array.isArray(d.tasks) ? d.tasks.length : 0,
+    id: lesson.data.id,
+    docCount: lesson.data.documents.length,
+    taskCount: lesson.data.tasks.length,
   };
 }
 
@@ -178,26 +129,12 @@ export async function loadCourseListAsync(): Promise<CourseListItem[]> {
   const rawCourses = await Promise.all(files.map(f => loadFileAsync(f)));
 
   const results = await Promise.all(
-    rawCourses.map(async (raw, i) => {
+    rawCourses.map(async (raw, i): Promise<CourseListItem | null> => {
       if (!raw) { return null; }
-      const data = parseJsonSafe(raw, `course ${files[i]}`);
-      if (!data || typeof data !== 'object') { return null; }
-      const d = data as Record<string, unknown>;
-      const id = d.id;
-      const title = d.title;
-      const description = d.description;
-      const level = isValidLevel(d.level) ? d.level : 'beginner';
-      const icon = isNonEmptyString(d.icon) ? d.icon : undefined;
-      if (!isNonEmptyString(id) || !isNonEmptyString(title)) { return null; }
+      const course = CourseSchema.safeParse(parseJsonSafe(raw, `course ${files[i]}`));
+      if (!course.success) { return null; }
 
-      const lessonRefs = Array.isArray(d.lessons) ? d.lessons : [];
-      const lessonCount = lessonRefs.length;
-
-      const metas = await Promise.all(
-        lessonRefs
-          .filter((r): r is string => isNonEmptyString(r))
-          .map(r => readLessonMetaAsync(r))
-      );
+      const metas = await Promise.all(course.data.lessons.map((ref) => readLessonMetaAsync(ref)));
 
       let taskCount = 0;
       let itemsCount = 0;
@@ -208,7 +145,17 @@ export async function loadCourseListAsync(): Promise<CourseListItem[]> {
         itemsCount += meta.docCount + meta.taskCount;
       }
 
-      return { id, title, description: isNonEmptyString(description) ? description : '', level, icon, lessonCount, taskCount, itemsCount, lessonIds } as CourseListItem;
+      return {
+        id: course.data.id,
+        title: course.data.title,
+        description: course.data.description,
+        level: course.data.level,
+        icon: course.data.icon,
+        lessonCount: course.data.lessons.length,
+        taskCount,
+        itemsCount,
+        lessonIds,
+      };
     })
   );
 
@@ -247,5 +194,3 @@ export async function loadCourseDetailsAsync(id: string): Promise<Course | null>
 
   return null;
 }
-
-

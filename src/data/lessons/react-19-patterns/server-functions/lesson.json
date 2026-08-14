@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "server-functions",
   "title": "Серверные функции",
   "documents": [

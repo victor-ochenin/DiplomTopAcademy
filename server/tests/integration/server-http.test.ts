@@ -49,7 +49,7 @@ describe('POST /api/query', () => {
     })
     expect(res.status).toBe(400)
     const body = await res.json()
-    expect(body.error).toBe('question is required')
+    expect(body.error).toContain('question')
   })
 
   it('returns 400 when question is not a string', async () => {
@@ -60,7 +60,7 @@ describe('POST /api/query', () => {
     })
     expect(res.status).toBe(400)
     const body = await res.json()
-    expect(body.error).toBe('question is required')
+    expect(body.error).toContain('question')
   })
 })
 

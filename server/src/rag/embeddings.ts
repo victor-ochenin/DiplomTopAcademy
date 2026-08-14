@@ -1,4 +1,11 @@
+import { z } from 'zod'
+
 const OPENROUTER_BASE = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1'
+
+const EmbeddingItemSchema = z.object({
+  index: z.number().int().nonnegative(),
+  embedding: z.array(z.number()),
+})
 
 // кастомный класс (адаптер) эмбеддингов для ChromaDB
 // ChromaDB ожидает интерфейс { generate(texts: string[]): number[][], name?: string, getConfig?(): any }
@@ -32,10 +39,21 @@ export class OpenRouterEmbeddingFunction {
       throw new Error(`OpenRouter embedding failed (${res.status}): ${err}`)
     }
     const json = await res.json()
-    if (!Array.isArray(json.data)) {
+    const items = z.array(EmbeddingItemSchema).safeParse(json.data)
+    if (!items.success) {
       throw new Error('OpenRouter returned invalid embedding response')
     }
+    // Индексы должны быть непротиворечивыми: ровно по одному на каждый входной текст.
+    // Иначе сортировка вернёт меньше эмбеддингов или свяжет их с неверным текстом.
+    const indexes = new Set(items.data.map(item => item.index))
+    if (
+      items.data.length !== texts.length ||
+      indexes.size !== texts.length ||
+      [...indexes].some(index => index >= texts.length)
+    ) {
+      throw new Error('OpenRouter returned incomplete embedding response')
+    }
     // OpenRouter возвращает массив в произвольном порядке — сортируем по index
-    return json.data.sort((a: any, b: any) => a.index - b.index).map((d: any) => d.embedding)
+    return items.data.sort((a, b) => a.index - b.index).map(d => d.embedding)
   }
 }

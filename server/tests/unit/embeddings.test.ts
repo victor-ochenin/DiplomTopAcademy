@@ -21,7 +21,7 @@ const mockResponse = (data: unknown, status = 200) =>
 
 describe('OpenRouterEmbeddingFunction', () => {
   it('sends correct request body and headers', async () => {
-    fetchMock.mockResolvedValue(mockResponse({ data: [] }))
+    fetchMock.mockResolvedValue(mockResponse({ data: [{ index: 0, embedding: [0.1] }] }))
     const emb = new OpenRouterEmbeddingFunction({ apiKey: 'sk-test' })
     await emb.generate(['hello'])
     expect(fetchMock).toHaveBeenCalledWith(
@@ -59,6 +59,14 @@ describe('OpenRouterEmbeddingFunction', () => {
     fetchMock.mockResolvedValue(mockResponse({}))
     const emb = new OpenRouterEmbeddingFunction({ apiKey: 'sk-test' })
     await expect(emb.generate(['x'])).rejects.toThrow('OpenRouter returned invalid embedding response')
+  })
+
+  it('throws when indexes are incomplete or duplicated', async () => {
+    fetchMock.mockResolvedValue(mockResponse({
+      data: [{ index: 0, embedding: [0.1] }, { index: 0, embedding: [0.2] }],
+    }))
+    const emb = new OpenRouterEmbeddingFunction({ apiKey: 'sk-test' })
+    await expect(emb.generate(['a', 'b'])).rejects.toThrow('OpenRouter returned incomplete embedding response')
   })
 
   it('uses OPENAI_API_KEY from env when apiKey not passed', async () => {

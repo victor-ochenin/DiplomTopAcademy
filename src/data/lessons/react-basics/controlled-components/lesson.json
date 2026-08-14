@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "controlled-components",
   "title": "Controlled Components",
   "documents": [

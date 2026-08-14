@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "useeffect",
   "title": "useEffect",
   "documents": [

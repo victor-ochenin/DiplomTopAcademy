@@ -2,11 +2,11 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const COURSES_DIR = join(ROOT, 'src', 'data', 'courses');
 const LESSONS_DIR = join(ROOT, 'src', 'data', 'lessons');
 
-const [courseId, lessonId, title] = process.argv.slice(2);
+const [courseId, lessonId, ...titleParts] = process.argv.slice(2);
 
 function fail(msg) {
   console.error(`✖ ${msg}`);
@@ -24,7 +24,9 @@ if (!ID_RE.test(courseId)) {
 if (!ID_RE.test(lessonId)) {
   fail(`lessonId must be slug (a-z0-9-), got: "${lessonId}"`);
 }
-const lessonTitle = title ?? lessonId.replace(/-/g, ' ');
+const lessonTitle = titleParts.length > 0
+  ? titleParts.join(' ')
+  : lessonId.replace(/-/g, ' ');
 
 const courseJsonPath = join(COURSES_DIR, `${courseId}.json`);
 if (!existsSync(courseJsonPath)) {
@@ -45,7 +47,6 @@ const mdFile = `${lessonId}.md`;
 const contentFile = `src/data/lessons/${courseId}/${lessonId}/${mdFile}`;
 
 const lessonJson = {
-  $schema: '../../../schemas/lesson.schema.json',
   id: lessonId,
   title: lessonTitle,
   documents: [{ id: 'intro', title: 'Введение', contentFile }],

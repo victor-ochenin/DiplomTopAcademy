@@ -2,8 +2,20 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { z } from 'zod'
 import 'dotenv/config'
 import { initRag, queryRag, checkCode } from './rag/query.js'
+
+const QuerySchema = z.object({
+  question: z.string().min(1),
+  history: z.array(z.object({ role: z.string(), text: z.string() })).optional(),
+})
+
+const CheckCodeSchema = z.object({
+  taskId: z.string().min(1),
+  lessonId: z.string().min(1),
+  code: z.string(),  kind: z.enum(['file', 'project']).optional(),
+})
 
 const app = new Hono()
 
@@ -20,23 +32,26 @@ initRag()
 // Запрос к RAG: вопрос от пользователя → ответ по материалам курса
 app.post('/api/query', async (c) => {
   if (!ready) return c.json({ error: 'RAG not ready' }, 503)
-  const { question, history } = await c.req.json()
-  if (!question || typeof question !== 'string') {
-    return c.json({ error: 'question is required' }, 400)
+  const body = await c.req.json().catch(() => null)
+  const parsed = QuerySchema.safeParse(body ?? {})
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    return c.json({ error: `${issue.path.join('.') || 'body'}: ${issue.message}` }, 400)
   }
-  const result = await queryRag(question, history)
+  const result = await queryRag(parsed.data.question, parsed.data.history)
   return c.json(result)
 })
 
 // Проверка кода пользователя через LLM. Читает lesson.json, находит задачу по taskId,
 // отправляет код + критерии в LLM, возвращает { passed, feedback }.
 app.post('/api/check-code', async (c) => {
-  const { taskId, lessonId, code, kind } = await c.req.json()
-  if (typeof taskId !== 'string' || typeof lessonId !== 'string' || typeof code !== 'string') {
+  const body = await c.req.json().catch(() => null)
+  const parsed = CheckCodeSchema.safeParse(body ?? {})
+  if (!parsed.success) {
     return c.json({ error: 'taskId, lessonId and code are required' }, 400)
   }
   try {
-    const result = await checkCode(taskId, lessonId, code, kind)
+    const result = await checkCode(parsed.data.taskId, parsed.data.lessonId, parsed.data.code, parsed.data.kind)
     return c.json(result)
   } catch (err) {
     console.error('check-code failed', err)

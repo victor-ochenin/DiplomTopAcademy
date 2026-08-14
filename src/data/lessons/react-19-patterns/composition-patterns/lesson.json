@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "composition-patterns",
   "title": "Паттерны композиции",
   "documents": [

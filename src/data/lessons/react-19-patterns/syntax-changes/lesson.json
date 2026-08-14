@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../schemas/lesson.schema.json",
   "id": "syntax-changes",
   "title": "Изменения синтаксиса React 19",
   "documents": [

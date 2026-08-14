@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { Task, CheckResult } from '../../types/messages'
+import type { Task, CheckResult, ExtensionMessage } from '../../types/messages'
 import { useVsCodeApi } from '../../hooks/useVsCodeApi'
 import '../../styles/components.css'
 
@@ -14,7 +14,7 @@ export default function CodingTask({ task, lessonId, onCompleteItem }: CodingTas
   const [isChecking, setIsChecking] = useState(false)
 
   const { postMessage } = useVsCodeApi(
-    useCallback((msg) => {
+    useCallback((msg: ExtensionMessage) => {
       if (msg.type === 'checkResult') {
         setResult(msg.payload)
         setIsChecking(false)

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { WebviewMessageSchema, type WebviewMessage } from '../protocol';
 import { loadCourseListAsync, loadCourseDetailsAsync } from '../data/courses';
 
 export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
@@ -27,8 +28,13 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
 
     // подписываемся на событие получения сообщений из webview где каждое обрабатываем через handleMessage
     webviewView.webview.onDidReceiveMessage(async (message) => {
+      const parsed = WebviewMessageSchema.safeParse(message);
+      if (!parsed.success) {
+        console.warn('Nodomia: invalid message from webview', parsed.error.issues);
+        return;
+      }
       try {
-        await this.handleMessage(message, webviewView);
+        await this.handleMessage(parsed.data, webviewView);
       } catch (err) {
         console.error('Nodomia: unhandled error in message handler', err);
       }
@@ -36,7 +42,7 @@ export class NodomiaWebviewProvider implements vscode.WebviewViewProvider {
   }
 
   private async handleMessage(
-    message: any,
+    message: WebviewMessage,
     webviewView: vscode.WebviewView
   ) {
     switch (message.type) {

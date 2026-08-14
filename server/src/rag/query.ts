@@ -3,8 +3,16 @@ import { join } from 'node:path'
 import { ChatOpenAI } from '@langchain/openai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { StringOutputParser } from '@langchain/core/output_parsers'
+import { z } from 'zod'
 import { ensureIndex, ensureWebIndex, testChromaConnection, queryAll, LESSONS_DIR } from './vectorStore.js'
 import { OpenRouterEmbeddingFunction } from './embeddings.js'
+
+const CheckResultSchema = z.object({ passed: z.boolean(), feedback: z.string() })
+const CodingTaskSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('coding'),
+  criteria: z.array(z.string().min(1)).min(1),
+})
 
 
 const model = new ChatOpenAI({
@@ -77,8 +85,10 @@ export async function checkCode(
   }
   if (!lessonPath) throw new Error(`Lesson ${lessonId} not found`)
   const lesson = JSON.parse(readFileSync(lessonPath, 'utf-8'))
-  const task = lesson.tasks.find((t: any) => t.id === taskId)
-  if (!task) throw new Error(`Task ${taskId} not found`)
+  const rawTask = (lesson.tasks ?? []).find((t: unknown) => (t as { id?: unknown })?.id === taskId)
+  if (!rawTask) throw new Error(`Task ${taskId} not found`)
+  const task = CodingTaskSchema.safeParse(rawTask)
+  if (!task.success) throw new Error(`Task ${taskId} invalid: ${task.error.issues[0].message}`)
 
   const prompt = ChatPromptTemplate.fromMessages([
     ['system', `You are a code reviewer. Check the provided code against the criteria.
@@ -90,7 +100,7 @@ Do NOT fix the code. Do NOT write a solution. Just evaluate.${kind === 'project'
   let answer: string
   try {
     answer = await prompt.pipe(model).pipe(new StringOutputParser()).invoke({
-      criteria: (task.criteria ?? []).join('\n'),
+      criteria: task.data.criteria.join('\n'),
       code,
     })
   } catch (err) {
@@ -99,12 +109,13 @@ Do NOT fix the code. Do NOT write a solution. Just evaluate.${kind === 'project'
   }
 
   const cleaned = answer.replace(/```json|```/g, '').trim()
-  try {
-    const parsed = JSON.parse(cleaned)
-    return { passed: Boolean(parsed.passed), feedback: String(parsed.feedback ?? '') }
-  } catch {
+  let parsed: unknown
+  try { parsed = JSON.parse(cleaned) } catch { /* fallback ниже */ }
+  const result = CheckResultSchema.safeParse(parsed)
+  if (!result.success) {
     return { passed: false, feedback: 'Не удалось обработать ответ проверки.' }
   }
+  return result.data
 }
 
 export { LESSONS_DIR }
