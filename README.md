@@ -26,8 +26,10 @@ WebView (React SPA)  ←→  Extension Host  ←→  RAG Server
 | Файл                              | Назначение                                                                                                                                                                               |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `extension.ts`                      | Точка входа. Инициализирует данные курсов и регистрирует провайдер WebView.                                                              |
-| `types.ts`                          | Типы: Course, CourseListItem, Lesson, Task (choice / open / coding), Document, Resource.                                                                                                       |
-| `webview/nodomiaWebviewProvider.ts` | WebviewViewProvider — получает сообщения от WebView, перенаправляет запросы к данным курсов или к RAG-серверу.                    |
+| `data/schemas.ts`                   | Единый источник формы данных (zod). От него производятся типы `types.ts` и валидатор `validate-data.ts`.                                |
+| `types.ts`                          | Типы курсов: Course, CourseListItem, Lesson, Task (choice / open / coding), Document, Resource — производные от `data/schemas.ts` через `z.infer`. |
+| `protocol.ts`                       | Типы и zod-валидация сообщений WebView ↔ extension (WebviewMessage, ExtensionMessage).                                                 |
+| `webview/nodomiaWebviewProvider.ts` | WebviewViewProvider — получает сообщения от WebView (валидирует через `protocol.ts`), перенаправляет запросы к данным курсов или к RAG-серверу. |
 | `data/courses/index.ts`             | Загрузчик курсов.`loadCourseListAsync` — список (метаданные без уроков), `loadCourseDetailsAsync` — полный курс с уроками по id. |
 
 ### WebView (`webview-ui/`)
@@ -39,7 +41,7 @@ React SPA, запускается внутри VS Code WebView. Связь с ex
 | `src/App.tsx`                   | Корневой компонент: список курсов / просмотр урока. Состояние: courses, progress, loading.          |
 | `src/hooks/useVsCodeApi.ts`     | Обёртка над`acquireVsCodeApi()`. Возвращает postMessage, getState, setState. Подписывается на `window.message`. |
 | `src/hooks/useRagState.ts`      | Сохраняет состояние панели RAG (открыта/закрыта) через`vscode.setState`.                                  |
-| `src/types/messages.ts`         | Типизированные сообщения между WebView и extension (WebviewMessage, ExtensionMessage).                                    |
+| `src/types/messages.ts`         | Типы сообщений WebView ↔ extension (реэкспорт из `src/protocol.ts`).                                                      |
 | `src/components/Courses/`       | CoursesPage, CourseCard, CourseTab — список курсов, карточки с прогрессом, аккордеон уроков.            |
 | `src/components/LessonView.tsx` | Рендер Markdown-теории (react-markdown + rehype-highlight).                                                                                |
 | `src/components/Tasks/`         | TaskRenderer, ChoiceTask, OpenTask, CodingTask — три типа заданий.                                                                      |
@@ -64,6 +66,8 @@ src/data/
 ```
 
 Каждый курс — один JSON-файл. Каждый урок — папка с `lesson.json` и `.md`-файлами контента. Загрузчик (`loadCourseListAsync`) читает метаданные всех курсов при старте; детали конкретного курса (`loadCourseDetailsAsync`) загружаются по требованию при клике.
+
+Форма данных описывается zod-схемами в `src/data/schemas.ts`; проверка данных — `npm run validate:data`. Новый урок создаётся командой `npm run new:lesson -- <courseId> <lessonId> <title>`.
 
 ### Типы заданий
 
